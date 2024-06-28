@@ -18,3 +18,11 @@ git的配置：
 $ git help <verb>
 $ git <verb> --help
 $ man git-<verb>
+使用 -h 获取简短的help
+
+
+
+配置并初始化一个仓库（repository）、开始或停止跟踪（track）文件、暂存（stage）或提交（commit）更改
+两种获取 Git 项目仓库的方式：将尚未进行版本控制的本地目录转换为 Git 仓库；从其它服务器 克隆 一个已存在的 Git 仓库
+在已存在目录中初始化仓库：$ git init ---仅仅是做了一个初始化的动作
+克隆现有的仓库：$ git clone <url> ; $ git clone <url> name ---增加额外参数指定新的目录名
