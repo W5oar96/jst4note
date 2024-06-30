@@ -65,4 +65,4 @@ $ git rm README.md
 $ git add README
 git mv 是一条命令而非三条命令，直接使用 git mv 方便得多
 
-
+查看提交历史：$ git log
