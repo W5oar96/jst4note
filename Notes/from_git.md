@@ -159,3 +159,22 @@ $ git tag tagname ---本质上是将提交校验和存储到一个文件中—�
 后期打标签：
 $ git log --perrty=oneline ---先查看提交历史
 $ git tag -a tagname content(指定提交的校验和,或部分校验和)
+
+共享标签：
+$ git push origin <tagname> ---在创建完标签后你必须显式地推送标签到共享服务器上
+默认情况下，git push 命令并不会传送标签到远程仓库服务器上
+也可以使用带有 --tags 选项的 git push 命令,将会把所有不在远程仓库服务器上的标签全部传送到那里
+$ git push origin --tags
+git push <remote> --tags 推送标签并不会区分轻量标签和附注标签， 没有简单的选项能够让你只选择推送一种标签
+
+删除标签：
+$ git tag -d <tagname>
+注意上述命令并不会从任何远程仓库中移除这个标签，你必须用 git push <remote> :refs/tags/<tagname> 来更新你的远程仓库
+第一种变体是 
+$ git push <remote> :refs/tags/<tagname> ---将冒号前面的空值推送到远程标签名，从而高效地删除它
+第二种更直观的删除远程标签的方式是 
+$ git push origin --delete <tagname>
+
+
+
+
