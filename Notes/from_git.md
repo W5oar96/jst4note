@@ -110,3 +110,21 @@ $ git commit --amend
 在 “Changes to be committed” 文字正下方，提示使用 git reset HEAD <file>…​ 来取消暂存
 $ git reset HEAD CONTRIBUTING.md ---用于取消暂存CONTRIBUTING.md 文件
 
+
+查看远程仓库：$ git remote
+可以指定选项 -v，会显示需要读写远程仓库使用的 Git 保存的简写与其对应的 URL
+
+添加远程仓库：$ git remote add <shortname> <url> ---添加一个新的远程 Git 仓库，同时指定一个方便使用的简写
+$ git fetch pb ---想拉取远程的仓库中有，但你没有的信息，可以运行 git fetch pb
+
+从远程仓库中抓取与拉取：
+$ git fetch <remote> ---这个命令会访问远程仓库，从中拉取所有你还没有的数据
+执行完成后，你将会拥有那个远程仓库中所有分支的引用，可以随时合并或查看
+必须注意 git fetch 命令只会将数据下载到你的本地仓库——它并不会自动合并或修改你当前的工作
+
+推送到远程仓库：
+git push <remote> <branch>
+将 branch 分支推送到 remote 服务器时， 那么运行这个命令就可以将你所做的备份到服务器
+
+查看某个远程仓库：
+git remote show <remote>
