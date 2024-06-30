@@ -103,3 +103,10 @@ $ git log -S function_name ---你想要找出添加或删除了对某一个特�
 
 
 撤销操作
+以运行带有 --amend 选项的提交命令来重新提交：
+$ git commit --amend
+
+取消暂存文件
+在 “Changes to be committed” 文字正下方，提示使用 git reset HEAD <file>…​ 来取消暂存
+$ git reset HEAD CONTRIBUTING.md ---用于取消暂存CONTRIBUTING.md 文件
+
