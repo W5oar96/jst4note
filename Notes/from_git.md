@@ -136,3 +136,24 @@ $ git remote rename <fetch> <remote> ---修改一个远程仓库的简写名
 远程仓库的移除：
 $ git remote remove <remote> / git remote rm <remote> ---移除一个远程仓库
 使用这种方式删除了一个远程仓库，那么所有和这个远程仓库相关的远程跟踪分支以及配置信息也会一起被删除
+
+
+打标签
+$ git tag ---列出标签，可带上可选的-l选项，--list
+
+创建标签：
+git支持两种标签：
+轻量标签lightweight ---像一个不会改变的分支，只是某个特定提交的引用
+附注标签annotated ---存储在git数据库中的一个完整对象
+
+附注标签：
+$ git tag -a tagname（可以替换） -m "content(可替换的内容)"
+-m 选项指定了一条将会存储在标签中的信息
+
+查看标签信息和与之对应的提交信息：$ git show
+
+轻量标签：
+$ git tag tagname ---本质上是将提交校验和存储到一个文件中——没有保存任何其他信息
+不需要使用 -a、-s 或 -m 选项，只需要提供标签名字
+
+
