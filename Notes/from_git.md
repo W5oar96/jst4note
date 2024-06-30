@@ -123,8 +123,16 @@ $ git fetch <remote> ---这个命令会访问远程仓库，从中拉取所有�
 必须注意 git fetch 命令只会将数据下载到你的本地仓库——它并不会自动合并或修改你当前的工作
 
 推送到远程仓库：
-git push <remote> <branch>
+$ git push <remote> <branch>
 将 branch 分支推送到 remote 服务器时， 那么运行这个命令就可以将你所做的备份到服务器
 
 查看某个远程仓库：
-git remote show <remote>
+$ git remote show <remote>
+会列出远程仓库的 URL 与跟踪分支的信息
+
+远程仓库的重命名：
+$ git remote rename <fetch> <remote> ---修改一个远程仓库的简写名
+
+远程仓库的移除：
+$ git remote remove <remote> / git remote rm <remote> ---移除一个远程仓库
+使用这种方式删除了一个远程仓库，那么所有和这个远程仓库相关的远程跟踪分支以及配置信息也会一起被删除
