@@ -156,4 +156,6 @@ $ git tag -a tagname（可以替换） -m "content(可替换的内容)"
 $ git tag tagname ---本质上是将提交校验和存储到一个文件中——没有保存任何其他信息
 不需要使用 -a、-s 或 -m 选项，只需要提供标签名字
 
-
+后期打标签：
+$ git log --perrty=oneline ---先查看提交历史
+$ git tag -a tagname content(指定提交的校验和,或部分校验和)
