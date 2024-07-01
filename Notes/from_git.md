@@ -197,6 +197,11 @@ $ git log --oneline --decorate
 
 创建新分支的同时切换过去: $ git checkout -b <newBranchName>
 
+创建一个新的分支指针： $ git commit -a -m 'content'
+
+合并分支： $ git merge <branchName>
+
+删除分支: $ git branch -d <branchName>
 
 
 
