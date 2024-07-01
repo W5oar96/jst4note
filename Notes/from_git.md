@@ -203,6 +203,6 @@ $ git log --oneline --decorate
 
 删除分支: $ git branch -d <branchName>
 
-
+使用图形化工具解决冲突：$ git mergetool
 
 
