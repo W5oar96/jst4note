@@ -205,3 +205,18 @@ $ git branch -d <branchName> ---删除分支
 
 $ git mergetool ---使用图形化工具解决冲突
 
+$ git branch ---会得到当前所有分支的一个列表
+分支前的 * 字符：代表现在检出的那一个分支，即HEAD指针所指向的分支
+
+$ git branch -V ---查看每一个分支的最后一次提交
+
+$ git branch --merged ---查看哪些分支已经合并到当前分支
+--merged 与 --no-merged 可以过滤这个列表中已经合并或尚未合并到当前分支的分支
+
+$ git branch -D <branchName> ---强制删除某个未合并的分支
+
+$ git ls-remote <remote> ---显示获取远程引用的完整列表
+
+$ git remote show <remote> ---获得远程分支的更多信息
+
+$ git fetch <remote> ---与给定的远程仓库同步数据
