@@ -184,5 +184,20 @@ $ git checkout <tagname> ---查看某个标签所指向的文件版本
 
 
 分支
+分支创建：$ git branch <branch> ---会在当前所在的提交对象上创建一个指针
+git branch 命令仅仅 创建 一个新分支，并不会自动切换到新分支中去
+它是一个指针，指向当前所在的本地分支
+
+以简单地使用 git log 命令查看各个分支当前所指的对象，提供这一功能的参数是 --decorate
+$ git log --oneline --decorate
+
+分支切换：$ git checkout <branch> ---切换到一个已经存在的分支
+
+项目分叉历史：$ git log --oneline --decorate --graph --all
+
+创建新分支的同时切换过去: $ git checkout -b <newBranchName>
+
+
+
 
 
