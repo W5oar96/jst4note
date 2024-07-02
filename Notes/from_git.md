@@ -232,3 +232,7 @@ $ git push <remote> <localbranch:remotebranch> ---推送本地的 branch分支�
 可以通过这种方式推送本地分支到一个命名不同的远程分支
 
 $ git push <remote> <localbranch:remotebranch> ---推送本地分支localbranch到远程仓库的remotebranch分支
+下一次其他协作者从服务器上抓取数据时，他们会在本地生成一个远程分支 origin/localbranch，指向服务器的 remotebranch 分支的引用
+
+$ git checkout -b localbranch origin/localbranch ---想要在自己的localbranch分支上工作
+可以将其建立在远程分支上 
