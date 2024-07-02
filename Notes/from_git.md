@@ -234,5 +234,20 @@ $ git push <remote> <localbranch:remotebranch> ---推送本地的 branch分支�
 $ git push <remote> <localbranch:remotebranch> ---推送本地分支localbranch到远程仓库的remotebranch分支
 下一次其他协作者从服务器上抓取数据时，他们会在本地生成一个远程分支 origin/localbranch，指向服务器的 remotebranch 分支的引用
 
-$ git checkout -b localbranch origin/localbranch ---想要在自己的localbranch分支上工作
-可以将其建立在远程分支上 
+$ git checkout -b <localbranch>  <remote>/<branch> ---想要在自己的localbranch分支上工作
+可以将其建立在远程分支上
+这会给你一个用于工作的本地分支，并且起点位于  <remote>/<branch>
+
+$ git checkout --track <remote/branch> ---跟踪一个分支
+
+$ git checkout -b newbranch <remote/branch> ---将本地分支与远程分支设置为不同的名字，可以使用上一个命令增加一个不同名字的分支
+
+设置已有的本地分支跟踪一个刚刚拉取下来的远程分支，或者想要修改正在跟踪的上游分支， 你可以在任意时间使用 -u 或 --set-upstream-to 选项运行 git branch 来显式地设置
+$ git branch -u <remote/branch>
+
+$ git branch -vv ---想要查看设置的所有跟踪分支，可以使用 -vv 选项
+会将所有的本地分支列出来并且包含更多的信息
+如每一个分支正在跟踪哪个远程分支与本地分支是否是领先、落后或是都有
+
+$ git fetch --all; git branch -vv ---想要统计最新的领先与落后数字，需要在运行此命令前抓取所有的远程仓库
+
