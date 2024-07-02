@@ -1,6 +1,7 @@
 # 相关链接：
 # https://www.kancloud.cn/git-managment/git/476405
 # https://git-scm.com/book
+# https://git-scm.com/book/zh/v2
 
 
 Git是版本控制工具 版本控制系统VCS
@@ -223,3 +224,11 @@ $ git ls-remote <remote> ---显示获取远程引用的完整列表
 $ git remote show <remote> ---获得远程分支的更多信息
 
 $ git fetch <remote> ---与给定的远程仓库同步数据
+抓取本地没有的数据，并且更新本地数据库，移动指针到最后的位置
+
+$ git push <remote> <branch> ---推送本地的 branch 分支来更新远程仓库上的 branch 分支
+
+$ git push <remote> <localbranch:remotebranch> ---推送本地的 branch分支将其作为远程仓库的branch分支
+可以通过这种方式推送本地分支到一个命名不同的远程分支
+
+$ git push <remote> <localbranch:remotebranch> ---推送本地分支localbranch到远程仓库的remotebranch分支
