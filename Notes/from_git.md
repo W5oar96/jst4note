@@ -251,3 +251,6 @@ $ git branch -vv ---想要查看设置的所有跟踪分支，可以使用 -vv �
 
 $ git fetch --all; git branch -vv ---想要统计最新的领先与落后数字，需要在运行此命令前抓取所有的远程仓库
 
+$ git push <remote> --delete <branch> ---运行带有 --delete选项的git push 命令来删除一个远程分支
+
+ 
