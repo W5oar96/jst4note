@@ -71,3 +71,6 @@ UTF-8，包括绝大多数人类书面语的大多数字符，页面可以处理
 ' ---&apos;
 & ---&amp;
 
+HTML的注释 ---用特殊的记号 <!-- 和 --> 包裹起来，如<!-- xxx -->
+
+https://developer.mozilla.org/zh-CN/docs/Learn/HTML/Introduction_to_HTML/The_head_metadata_in_HTML
