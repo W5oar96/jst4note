@@ -104,4 +104,7 @@ rel="stylesheet" 表明这是文档的样式表，而 href 包含了样式表文
 不会因为 JavaScript 试图访问页面上不存在的 HTML 元素而产生错误
 <script src="my-js-file.js" defer></script>
 
+通过添加 lang 属性，可以而且有必要为站点设定语言
+<html lang="zh-CN"> </html>
 
+# https://developer.mozilla.org/zh-CN/docs/Learn/HTML/Introduction_to_HTML/HTML_text_fundamentals
