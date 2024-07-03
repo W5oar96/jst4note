@@ -74,3 +74,20 @@ UTF-8，包括绝大多数人类书面语的大多数字符，页面可以处理
 HTML的注释 ---用特殊的记号 <!-- 和 --> 包裹起来，如<!-- xxx -->
 
 # https://developer.mozilla.org/zh-CN/docs/Learn/HTML/Introduction_to_HTML/The_head_metadata_in_HTML
+
+<title>...</title> ---是为文档添加标题
+<h1>...</h1> ---是为body添加顶级标题的，也称网页标题
+<h1> 元素在页面加载完毕时显示在页面中，通常只出现一次，用来标记页面内容的标题
+<title> 元素是一项元数据，用于表示整个html文档的标题，不是文档内容
+
+<meta> 元素包含了name和content属性
+name属性指定了meta元素的类型，说明该元素包含什么类型的信息
+content属性指定了实际的元数据类型
+description属性用来描述网页
+
+为站点增加自定义图标 favicon，favorite icon的缩写
+通常会在浏览器的收藏夹及书签列表中显示
+16 像素的方形图标是第一种类型
+将其保存在与网站的索引页面相同的目录中，以 .ico 格式保存，大多数浏览器支持更通用的格式，如 .gif 或 .png
+将以下行添加到 HTML 的 <head> 块中以引用它：
+<link rel="icon" href="favicon.ico" type="image/x-icon" />
