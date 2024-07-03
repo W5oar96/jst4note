@@ -91,3 +91,17 @@ description属性用来描述网页
 将其保存在与网站的索引页面相同的目录中，以 .ico 格式保存，大多数浏览器支持更通用的格式，如 .gif 或 .png
 将以下行添加到 HTML 的 <head> 块中以引用它：
 <link rel="icon" href="favicon.ico" type="image/x-icon" />
+Tips：如果你的网站使用了内容安全策略（Content Security Policy，CSP）来增加安全性，这个策略会应用在 favicon 图标上。如果你遇到了图标没有被加载的问题，你需要确认 Content-Security-Policy 响应头的 img-src 指令 没有阻止访问图标
+
+<link> 元素经常位于文档的头部，它有 2 个属性
+rel="stylesheet" 表明这是文档的样式表，而 href 包含了样式表文件的路径
+<link rel="stylesheet" href="my-css-file.css" />
+
+<script> 元素也应当放在文档的头部
+并包含 src 属性来指向需要加载的 JavaScript 文件路径
+同时最好加上 defer 以告诉浏览器在解析完成 HTML 后再加载 JavaScript
+这样可以确保在加载脚本之前浏览器已经解析了所有的 HTML 内容
+不会因为 JavaScript 试图访问页面上不存在的 HTML 元素而产生错误
+<script src="my-js-file.js" defer></script>
+
+
