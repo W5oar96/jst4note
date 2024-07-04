@@ -254,3 +254,28 @@ $ git fetch --all; git branch -vv ---想要统计最新的领先与落后数字�
 $ git push <remote> --delete <branch> ---运行带有 --delete选项的git push 命令来删除一个远程分支
 
  
+
+
+在Git中，如果你想要更新你的仓库至远程仓库的最新状态，并舍弃本地的更改，你可以使用以下步骤：
+
+Stash Local Changes: 如果你想要保存当前的工作进度，但稍后再处理它们，可以使用git stash命令。这将保存你的更改，然后你可以安全地进行git pull。
+
+git stash
+Discard Local Changes: 如果你想要完全丢弃本地的更改，包括未提交的更改和未跟踪的文件，可以使用git reset和git clean命令。请注意，这将永久删除你的本地更改。
+
+git reset --hard
+git clean -fd
+--hard选项会重置你的工作目录和索引到最后一次提交的状态，而-f（或--force）选项强制执行清理，-d选项包括目录，-f清理未跟踪的文件。
+
+Pull from Remote: 现在你的仓库是干净的，你可以从远程仓库拉取最新的更改。
+
+git pull origin main
+请将origin替换为你的远程仓库的名称，main替换为你想要更新的分支名称。
+
+Deal with Stashed Changes: 如果你之前使用了git stash，现在可以决定如何处理这些更改。你可以选择应用它们到当前的工作目录：
+
+git stash apply
+或者，如果你确定不再需要这些更改，可以删除它们：
+
+git stash drop
+
