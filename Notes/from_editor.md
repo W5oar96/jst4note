@@ -31,4 +31,4 @@ error: RPC failed; curl 35 OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0
 fatal: expected flush after ref listing
 错误信息 "fatal: expected flush after ref listing" 通常与git在克隆或拉取仓库时遇到的SSL验证问题有关
 解决方法是全局禁用Git的SSL验证，忽略SSL证书错误，从而避免错误
-$ git config --global http.sslverify false
+$ git config --global http.sslverify false 
