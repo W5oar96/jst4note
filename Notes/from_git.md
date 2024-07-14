@@ -280,3 +280,17 @@ git stash apply
 git stash drop
 
 https://blog.csdn.net/u011213044/article/details/107543170
+
+已经删除了一些文件，但这些更改还没有被暂存（staged）以供提交
+使用 git add 命令来暂存这些删除操作
+你可以使用通配符来一次性添加所有列出的文件：$ git add -A
+
+一旦你暂存了这些更改，你可以使用 git commit 命令来提交它们，添加一个有意义的提交信息
+git commit -m "commit message"
+
+想要撤销这些删除操作，可以使用 git restore 命令来恢复文件：
+git restore 命令会恢复文件到最后一次提交的状态，如果你已经删除了这些文件，使用这个命令将会撤销删除操作
+git restore <fileName>
+
+如果你确定要删除这些文件，并且想要将这些更改推送到远程仓库，使用 git push 命令：
+git push origin <local-branch-name>
