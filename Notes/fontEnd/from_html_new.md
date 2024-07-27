@@ -84,3 +84,15 @@ HTML图像标签
 <img>-定义图像
 <map>-定义图像地图
 <area>-定义图像地图中的可点击区域
+
+HTML表格
+<table>-定义表格
+<th>-table header，定义表头（列的标题）
+<tr>-table row，定义表格的每一行
+<td>-table data，定义每行中的每个单元格
+<caption>-定义表格标题
+<colgroup>-定义表格列的数组
+<col>-定义用于表格列的属性
+<thead>-定义表格的页眉
+<tbody>-定义表格主体
+<tfoot>-定义表格的页脚
