@@ -96,3 +96,16 @@ HTML表格
 <thead>-定义表格的页眉
 <tbody>-定义表格主体
 <tfoot>-定义表格的页脚
+
+HTML列表标签
+<ol>-定义有序列表
+<ul>-unordered list，定义无序列表
+<li>-list item，定义列表项
+<dl>-definition list，定义列表
+<dt>-definition description，自定义列表项
+<dd>-definition description，定义自定列表项的描述
+<nl>-navigation lists，导航列表
+
+HTML分组标签
+<div>-定义了文档的区域，块级（block-level）
+<span>-用来组合文档中的行内元素，内联元素（inline）
