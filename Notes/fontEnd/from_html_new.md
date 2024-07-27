@@ -87,8 +87,8 @@ HTML图像标签
 
 HTML表格
 <table>-定义表格
-<th>-table header，定义表头（列的标题）
 <tr>-table row，定义表格的每一行
+<th>-table header，定义表头（列的标题）
 <td>-table data，定义每行中的每个单元格
 <caption>-定义表格标题
 <colgroup>-定义表格列的数组
