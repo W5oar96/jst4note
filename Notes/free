@@ -1,0 +1,216 @@
+import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'dva';
+import { formatMessage, FormattedMessage } from 'umi/locale';
+import { Card, Divider, message, Modal, Popconfirm } from 'antd';
+import AdvancedTable from '@/components/AdvancedTable';
+import commonStyle from '@/assets/styles/project.less';
+import SurveyDetail from './surveyDetail/homeTable';
+import { isZh } from '@/utils/utils';
+
+const getWindowHeight = () => window.innerHeight || document.documentElement.clientHeight;
+const screenHeight = getWindowHeight() - 200;
+
+@connect(({ LtSurvey, loading, CodeSelect, LtCourseProgram }) => ({
+  LtCourseProgram,
+  LtSurvey,
+  CodeSelect,
+  loading: loading.models.LtSurvey,
+}))
+class Home extends PureComponent {
+  componentDidMount() {
+    const {
+      dispatch,
+      programCode,
+      LtSurvey: { queryPara, queryParaSize },
+    } = this.props;
+    // 批量加载码表数据
+    dispatch({
+      type: 'CodeSelect/advancecodequery',
+      queryPara: {
+        codeType: 'surveypaperclassify',
+      },
+      callback: resp => {
+        Object.keys(resp).forEach(key => {
+          dispatch({
+            type: 'CodeSelect/codequerycallback',
+            payload: resp[key],
+            queryPara: {
+              codeType: key,
+            },
+          });
+        });
+      },
+    });
+
+    // 根据不同的页面功能，加载数据
+    if (queryPara.size === queryParaSize) {
+      delete queryPara.size;
+    }
+    queryPara.programCode = programCode;
+    queryPara.dataCate = 'survey';
+    dispatch({ type: 'LtSurvey/fetch', queryPara });
+  }
+
+  // 查询表格的列定义
+  getColumns = () => {
+    const { dispatch, CodeSelect, loading, LtCourseProgram: {pageFunction}} = this.props;
+    console.log('1111111111',pageFunction)
+    return [
+      {
+        title: formatMessage({ id: 'LtExamInfo.surveyName' }),
+        dataIndex: 'examName',
+        width: 200,
+        fixed: 'left',
+      },
+      {
+        title: formatMessage({ id: 'LtTestPaper.singleChoiceCount' }),
+        dataIndex: 'singleChoiceCount',
+        align: 'right',
+      },
+      {
+        title: formatMessage({ id: 'LtTestPaper.multipleChoiceCount' }),
+        dataIndex: 'multipleChoiceCount',
+        align: 'right',
+      },
+      {
+        title: formatMessage({ id: 'LtTestPaper.judgmentalCount' }),
+        dataIndex: 'judgmentalCount',
+        align: 'right',
+      },
+      {
+        title: formatMessage({ id: 'LtTestPaper.completionCount' }),
+        dataIndex: 'completionCount',
+        align: 'right',
+      },
+      {
+        title: formatMessage({ id: 'LtTestPaper.openCount' }),
+        dataIndex: 'openCount',
+        align: 'right',
+      },
+      {
+        title: formatMessage({ id: 'LtTestPaper.commitedStudentCount' }),
+        dataIndex: 'commitedStudentCount',
+        align: 'right',
+      },
+      {
+        title: formatMessage({ id: 'LtTestPaper.allStudentCount' }),
+        dataIndex: 'allStudentCount',
+        align: 'right',
+      },
+      {
+        title: formatMessage({ id: 'global.operate' }),
+        dataIndex: 'global.operate',
+        hideInTable: pageFunction !== 'teacher',
+        width: 150,
+        fixed: 'right',
+        render: (text, record) => (
+          <Fragment>
+            <a onClick={() => this.showModal(record)}>
+              <FormattedMessage id="LtTrainProgram.surveyDataCal" />
+            </a>
+          </Fragment>
+        ),
+      }
+    ];
+  };
+
+  // 模态框
+  showModal = record => {
+    const { dispatch } = this.props;
+
+    dispatch({
+      type: 'LtSurvey/visibleChange',
+      visible: true,
+      currData: record,
+    });
+  };
+
+  // 弹出关闭按钮
+  handleCancel = record => {
+    const { dispatch } = this.props;
+
+    dispatch({ type: 'LtSurvey/visibleChange', visible: false, currData: {} });
+  };
+
+  // 提交
+  handleSubmit = (checked, record) => {
+    const { dispatch } = this.props;
+    if (checked) {
+      if (
+        record.singleChoiceCount +
+        record.multipleChoiceCount +
+        record.judgmentalCount +
+        record.completionCount +
+        record.openCount ===
+        0
+      ) {
+        message.error(formatMessage({ id: 'LtExamInfos.addTopicPublish' }));
+        return;
+      }
+    }
+
+    const newRecord = JSON.parse(JSON.stringify(record));
+    newRecord.status = checked ? '1' : '0';
+
+    dispatch({
+      type: 'LtSurvey/update',
+      payload: newRecord,
+      callback: () => {
+        this.componentDidMount();
+      },
+    });
+  };
+
+  render() {
+    const {
+      programCode,
+      LtSurvey: { currData, selectedIds, queryPara, data, visible },
+      loading,
+    } = this.props;
+    // console.log('pageFunction',pageFunction)
+    queryPara.programCode = programCode;
+    const rowSelection = {
+      // 展示复选框的条件
+      canSelectOption: false,
+      // 选中的keys
+      selectedRowKeys: selectedIds,
+      // 不可选的条件
+      disabledOption: record => ({
+        // Column configuration not to be checked 根据实际情况处理
+        disabled: record.status === '01',
+      }),
+    };
+    return (
+      <div className={isZh() ? commonStyle.standardList : commonStyle.standardListUs}>
+        <Fragment>
+          <Modal
+            title={`${formatMessage({ id: 'LtTrainProgram.surveyDataCal' })}`}
+            width="80%"
+            height="70%"
+            destroyOnClose
+            visible={visible}
+            bodyStyle={{ height: screenHeight, overflowY: 'auto' }}
+            maskClosable={false}
+            footer={null}
+            closable
+            onCancel={() => this.handleCancel(currData)}
+          >
+            <SurveyDetail examCode={currData.examCode} />
+          </Modal>
+
+          <Card bordered={false}>{/* <QuerySimple /> */}</Card>
+          <AdvancedTable
+            namespace="LtSurvey"
+            queryPara={queryPara}
+            data={data}
+            columns={this.getColumns()}
+            rowSelection={rowSelection}
+            loading={loading}
+          />
+        </Fragment>
+      </div>
+    );
+  }
+}
+
+export default Home;
