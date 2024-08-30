@@ -18,3 +18,5 @@ create-react-app <name>
 
 React组件是返回标记的JavaScript函数
 React组件名称必须以大写字母开头，HTML标签必须是小写
+
+https://geekdaxue.co/books/lulongwen@react
