@@ -33,3 +33,21 @@
 .student p{
   margin: 0;
 }
+.welcome-message{
+  font-family: Arial, sans-serif;
+  background-color: bisque;
+  color: black;
+  font-size: 2em;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 0px;
+}
+.login-prompt{
+  font-family: Arial, sans-serif;
+  background-color: aquamarine;
+  color: blueviolet;
+  font-size: 2em;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 0px;
+}
