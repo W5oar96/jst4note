@@ -1,13 +1,12 @@
 import Card from "./Card.jsx"
-import UserGretting from "./UserGretting.jsx"
+import List from "./List.jsx"
 
 function App() {
 
   return(
     <>
       <Card />
-      <UserGretting isLoggedIn={true} userName="BroCode"/>
-      <UserGretting />
+      <List />
     </>
   )
 }
