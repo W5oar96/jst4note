@@ -1,5 +1,5 @@
-import Card from "./Card"
-import Button from "./Button"
+import Card from "./Card.jsx"
+import Button from "./Button/Button.jsx"
 
 function App() {
 
