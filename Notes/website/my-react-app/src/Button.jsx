@@ -11,7 +11,10 @@ function Button() {
     }
 
     const handleClick = () => console.log("OUCH!!!");
-    const handleClick2 = (name) => console.log('${name} stop clicking')
+    // const handleClick2 = (name) => () => console.log(`${name} stop clicking`);
+    const handleClick2 = (name) => {
+        return () => console.log(`${name} stop clicking`);
+    };
     return(
         <>
             {/* <button style={styles}>Click me</button> */}
