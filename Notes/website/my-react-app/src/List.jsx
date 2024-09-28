@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 
 function List(props) {
 
@@ -14,5 +15,18 @@ function List(props) {
             <ol className="list-item">{listItems}</ol>
             </>);
 }
+
+List.propTypes = {
+    items: PropTypes.arrayOf(PropTypes.shape({id: PropTypes.number,
+                                            name: PropTypes.string,
+                                            calories: PropTypes.number,
+                                        })),
+    category: PropTypes.string,
+}
+
+List.defaultProps = {
+    items: [],
+    category: "Category",
+};
 
 export default List
