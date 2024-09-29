@@ -1,25 +1,20 @@
 
 function Button() {
 
-    const styles = {
-        backgroundColor: 'brown',
-        color: 'aliceblue',
-        padding: '10px 20px',
-        borderRadius: '5px',
-        border: 'none',
-        cursor: 'pointer'
+    let count = 0;
+
+    const handleClick = (name) => {
+        if(count<3){
+            count++;
+            console.log(`${name} you cliked me ${count} time/s!!!`);
+        }
+        else{
+            console.log(`${name} stop click me!!!!`);
+        }
     }
 
-    const handleClick = () => console.log("OUCH!!!");
-    // const handleClick2 = (name) => () => console.log(`${name} stop clicking`);
-    const handleClick2 = (name) => {
-        return () => console.log(`${name} stop clicking`);
-    };
-    return(
-        <>
-            {/* <button style={styles}>Click me</button> */}
-            <button onClick={handleClick2("Bro")}>Click me 😈</button>
-        </>
+    return(   
+        <button onClick={() => handleClick("Bro")}>Click me 😈</button>
     )
 }
 
