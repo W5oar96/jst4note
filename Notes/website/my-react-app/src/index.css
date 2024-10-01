@@ -82,3 +82,23 @@
   max-width: 250px;
   display: inline-block;  
 }
+.counter-container{
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+.counter-display{
+  font-size: 1em;
+  margin-top: 0;
+  margin-bottom: 50px;
+}
+.counter-button{
+  font-size: 1em;
+  font-weight: bold;
+  color: hsl(0, 0%, 20%);
+  margin-bottom: 10px;
+  text-align: justify;
+  border: 3px solid;
+  border-radius: 5px;
+  background-color: hsl(160, 100%, 75%);
+  cursor: pointer;
+}
