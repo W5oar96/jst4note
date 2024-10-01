@@ -2,10 +2,10 @@ import React,{useState} from "react";
 
 function MyComponent() {
 
-    let [name, setName] = useState();
+    const [name, setName] = useState();
 
     const updateName = () => {
-        name = "Spongebob";
+        setName("Spongebob");
         console.log(name);
     }
 
