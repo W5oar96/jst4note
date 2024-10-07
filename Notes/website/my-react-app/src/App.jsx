@@ -10,7 +10,7 @@ function App() {
     return(
     <>
       <Card />
-      <ColorPicker />
+      <Counter />
     </>
   )
 }
