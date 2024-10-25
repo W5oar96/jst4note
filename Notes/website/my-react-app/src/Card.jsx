@@ -1,11 +1,14 @@
-import ProfilePic from './assets/profile.jpg'
+import ProfilePic from './assets/profile.jpg';
+import ProfilePic2 from './assets/profile.jpg';
+
 
 function Card() {
     return(
         <div className='card'>
             <img className='card-img' src={ProfilePic} alt="profile picture"></img>
-            <h2 className='card-h2'>Bro Code</h2>
-            <p className='card-p'>I make youtube video and play video games</p>
+            <img className='card-img' src={ProfilePic2} alt="profile picture"></img>
+            <h2 className='card-h2'>FK U</h2>
+            <p className='card-p'>Fuck you liulei</p>
         </div>
     )
 }
