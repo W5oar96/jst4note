@@ -1,5 +1,5 @@
 import ProfilePic from './assets/profile.jpg';
-import ProfilePic2 from './assets/profile.jpg';
+import ProfilePic2 from './assets/profile2.jpg';
 
 
 function Card() {
