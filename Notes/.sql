@@ -600,7 +600,7 @@ CASE
 		'进行中' 
 	END AS "是否已完成",
 	(
-    SUM(car.video_length * car.play_percent) * 100.0 /
+    SUM(car.video_length * car.play_percent) /
     (
         SELECT COALESCE(SUM(time_duration), 0) 
         FROM lt_course_chapter 
@@ -609,7 +609,7 @@ CASE
         AND status = '1' 
         AND deleted = FALSE
     )
-)::numeric(10, 4) AS "学习进度"
+)::numeric(10, 4) AS "学习进度",
     ROUND(
     SUM(car.video_length * car.play_percent) / NULLIF(
         (SELECT SUM(time_duration) FROM lt_course_chapter WHERE course_code = ljcr.course_code AND time_duration IS NOT NULL AND status = '1' AND deleted = FALSE),
