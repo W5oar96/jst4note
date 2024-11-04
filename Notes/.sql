@@ -826,3 +826,17 @@ GROUP BY
 ORDER BY 
     lei.exam_code,
     lsi.staff_code;
+
+------更新某个字段-------
+UPDATE lt_student_info
+SET manage_com = (
+    SELECT sys_manage_com.manage_com
+    FROM sys_manage_com
+    JOIN sync_tj_student_temp ON sys_manage_com.department_id = sync_tj_student_temp.department_id
+    WHERE sync_tj_student_temp.train_code = lt_student_info.train_code
+)
+WHERE EXISTS (
+    SELECT 1
+    FROM sync_tj_student_temp
+    WHERE sync_tj_student_temp.train_code = lt_student_info.train_code
+);
