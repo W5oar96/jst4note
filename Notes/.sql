@@ -840,3 +840,22 @@ WHERE EXISTS (
     FROM sync_tj_student_temp
     WHERE sync_tj_student_temp.train_code = lt_student_info.train_code
 );
+
+/**
+试卷编码反查题库编码
+*/
+select DISTINCT (question_bank_code) from
+(SELECT
+	question_bank_code,
+	question_bank_name 
+FROM
+	lt_question_bank lqb,
+	lt_question lq,
+	lt_test_paper ltp,
+	lt_test_paper_question ltpq 
+WHERE
+	ltp.test_paper_code = ltpq.test_paper_code 
+	AND ltpq.question_code = lq.question_code 
+	AND lq.source_code = lqb.question_bank_code
+	and ltp.test_paper_code = '4PYMQK9EVPQ' ---调整为要查询试卷编码---
+	)a
