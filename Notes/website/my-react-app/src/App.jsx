@@ -8,6 +8,7 @@ import ColorPicker from "./ColorPicker.jsx";
 import MyComponent3 from "./MyComponent3.jsx";
 import MyComponent4 from "./MyComponent4.jsx";
 import ToDoList from "./ToDoList.jsx";
+import Clock from "./Clock.jsx";
 
 function App() {
 
