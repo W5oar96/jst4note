@@ -858,4 +858,40 @@ WHERE
 	AND ltpq.question_code = lq.question_code 
 	AND lq.source_code = lqb.question_bank_code
 	and ltp.test_paper_code = '4PYMQK9EVPQ' ---调整为要查询试卷编码---
-	)a
+	)a;
+
+/*
+查询直播人数
+**/
+SELECT
+	psvl.channel_id,
+	plc.NAME,
+	COUNT ( DISTINCT psvl.view_id ) AS unique_view_count 
+FROM
+	polyv_live_channel plc
+	JOIN polyv_statistics_view_log psvl ON plc.channel_id = psvl.channel_id 
+GROUP BY
+	psvl.channel_id,
+	plc.NAME 
+HAVING
+	COUNT ( DISTINCT psvl.view_id ) > 1 
+ORDER BY
+	COUNT ( DISTINCT psvl.view_id ) DESC;
+
+/*
+查询直播人次
+**/
+SELECT
+	psvl.channel_id,
+	plc.NAME,
+	COUNT ( DISTINCT psvl.view_id ) AS unique_view_count 
+FROM
+	polyv_live_channel plc
+	JOIN polyv_statistics_view_log psvl ON plc.channel_id = psvl.channel_id 
+GROUP BY
+	psvl.channel_id,
+	plc.NAME 
+HAVING
+	COUNT ( * ) > 1 
+ORDER BY
+	COUNT ( DISTINCT psvl.view_id ) DESC;
