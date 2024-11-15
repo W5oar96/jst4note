@@ -725,7 +725,7 @@ WHERE
 	AND leqs.question_code = lq.question_code 
 	AND les.exam_count = leqs.exam_count 
 	AND les.train_code = lsi.train_code 
-	AND lei.exam_code IN ( '4PY999S4RNS', '4PXRZB3RANG', '4PXRY8TUJ10', '4PXRX7628A8' ) -- 直接使用具体的考试编码替换 '提供的课程编码'---
+	AND lei.exam_code IN ( '4PY999S4RNS', '4PXRZB3RANG', '4PXRY8TUJ10', '4PXRX7628A8' ) ---直接使用具体的考试编码替换---
 ORDER BY
 	lei.exam_code,
 	leqs.exam_count,
