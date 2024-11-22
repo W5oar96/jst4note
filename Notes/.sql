@@ -895,3 +895,106 @@ HAVING
 	COUNT ( * ) > 1 
 ORDER BY
 	COUNT ( DISTINCT psvl.view_id ) DESC;
+
+/**
+*专题课程学习进度，集团特供
+*/
+SELECT
+	lsi.NAME 姓名,
+	lsi.staff_code 工号,
+	lsi.manage_com_name 所属机构,
+	lci.course_code 课程编码,
+	lci.course_name 课程名称,
+	lcss.created_date 加入时间,
+	ljcr.begin_learn_time 开始学习时间,
+	ljcr.finish_learn_time 结束学习时间,
+CASE
+		lcss.is_finish 
+		WHEN '0' THEN
+		'未开始' 
+		WHEN '1' THEN
+		'进行中' 
+		WHEN '4' THEN
+		'已完成' 
+	END AS "学习状态",
+	(
+        SELECT
+            SUM(car.video_length * car.play_percent) /
+            (
+                SELECT COALESCE(SUM(time_duration), 0) 
+                FROM lt_course_chapter 
+                WHERE course_code = ljcr.course_code 
+                AND time_duration IS NOT NULL 
+                AND status = '1' 
+                AND deleted = FALSE
+            )::numeric(10, 4)
+        FROM counter_analyse_result car
+        WHERE ljcr.course_code = car.course_code 
+        AND ljcr.train_code = car.train_code 
+        AND car.chapter_code IN (
+            SELECT chapter_code 
+            FROM lt_course_chapter 
+            WHERE course_code = ljcr.course_code 
+            AND time_duration IS NOT NULL 
+            AND status = '1' 
+            AND deleted = FALSE
+        ) 
+        AND car.source_from = ljcr.source_from 
+    ) AS "学习进度"
+FROM
+	lt_course_set_student lcss
+	LEFT JOIN lt_student_info lsi ON lcss.train_code = lsi.train_code
+	LEFT JOIN lt_course_set_rela lcsr ON lcss.course_set_code = lcsr.course_set_code
+	LEFT JOIN lt_course_info lci ON lcsr.source_code = lci.course_code
+	LEFT JOIN lt_join_course_report ljcr ON ljcr.course_code = lcsr.source_code 
+	AND ljcr.train_code = lcss.train_code
+WHERE
+	lsi.ID IS NOT NULL 
+	AND lci.ID IS NOT NULL 
+	AND lcsr.source_from = 'course' 
+	AND lcsr.status = '1' 
+	AND lcsr.stage_code IS NOT NULL 
+	AND lcss.course_set_code = '4PRAH0EX9LR' 
+	AND ljcr.begin_learn_time > '2024-11-16 00:00:00.000+08' 
+	AND ljcr.begin_learn_time < '2024-11-19 00:00:00.000+08' 
+	AND ljcr.begin_learn_time IS NOT NULL 
+
+ORDER BY
+	lcss.created_date DESC
+
+/**没啥用*/
+train_code = ,
+branch_type = 'B',
+manage_com='A8605',
+stu_flag='2',
+name = ,
+sex= ,
+e_mail = ,
+agent_state ='01',
+status ='1',
+deleted =false,
+company='byd-group'
+created_by ='9c071fc337094a98a56ab100dc6e1971',
+created_by_staff_code ='5056552', created_by_name='李观青',created_by_manage_com = 'A86',
+created_date = VALUES(now()),
+last_modified_by='5056552(李观青)',
+last_modified_by='5056552(李观青)',
+last_modified_date = VALUES(now()),
+language = 'zh-CN',
+initial ='Y',
+created_by_manage_com_name = '比亚迪'
+
+/*
+工号姓名引入temp_account
+临时账号手动添加
+默认密码为Aa123456
+**/
+UPDATE temp_account
+SET train_code = MD5(CONCAT(e_mail))
+WHERE train_code IS NULL;
+
+INSERT INTO lt_student_info select nextval ('sequence_generator'), train_code, 'B', 'A8605', NULL, '2', NULL, name, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, e_mail, NULL, NULL, NULL, NULL, NULL, '01', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 0, NULL, 'f', 'byd-group', 'system', NULL, NULL, 'A8605', '2024-11-18 17:13:16.896+08', 'init', '2024-11-18 17:13:16.896+08', '2024-11-18 17:13:16.896+08', NULL, NULL, NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, NULL, NULL, NULL from temp_account where not exists(select 1 from lt_student_info where train_code = temp_account.train_code);
+
+insert into jhi_user(id,login,password_hash,activated,created_by) select nextval ('sequence_generator'),train_code,'$2a$10$E2huMDDkb1AOGRtTJ3qSXezNaHLJrcQOsELe5.iNsrin2Eaxsi7H2',true,'202411' from lt_student_info where not exists(select 1 from jhi_user where login = train_code);
+
+insert into jhi_user_authority select id,'ROLE_USER' from jhi_user where not exists(select 1 from jhi_user_authority where user_id = jhi_user.id);
