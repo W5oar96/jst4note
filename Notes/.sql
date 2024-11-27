@@ -998,3 +998,53 @@ INSERT INTO lt_student_info select nextval ('sequence_generator'), train_code, '
 insert into jhi_user(id,login,password_hash,activated,created_by) select nextval ('sequence_generator'),train_code,'$2a$10$E2huMDDkb1AOGRtTJ3qSXezNaHLJrcQOsELe5.iNsrin2Eaxsi7H2',true,'202411' from lt_student_info where not exists(select 1 from jhi_user where login = train_code);
 
 insert into jhi_user_authority select id,'ROLE_USER' from jhi_user where not exists(select 1 from jhi_user_authority where user_id = jhi_user.id);
+
+
+/*
+课程章节
+**/
+select * from counter_analyse_result where created_by_staff_code = '7990757' and course_code = '001-000006';
+select * from lt_join_course_report where created_by_staff_code = '7990757' and course_code = '001-000006';
+
+/*
+课时记录查询（创建临时表）
+**/
+-- 创建临时表
+CREATE TEMPORARY TABLE IF NOT EXISTS temp_counter_trance_log AS
+SELECT 
+    course_code, 
+    chapter_code, 
+    COUNT(DISTINCT train_code) AS learnPerson, 
+    SUM(duration_of_this_play) AS learnTimeSum, 
+    COUNT(id) AS learnCount
+FROM 
+    counter_trance_log
+GROUP BY 
+    course_code, 
+    chapter_code;
+
+-- 主查询
+SELECT 
+    a.course_code AS 课程编码, 
+    b.course_name AS 课程名称,
+    b.created_by_staff_code AS 创建人工号,
+    b.created_by_name AS 创建人姓名,
+    b.created_by_manage_com_name AS 创建人机构,
+    a.chapter_code AS 章节编码, 
+    a.chapter_name AS 章节名称,
+    (SELECT code_name FROM sys_code_select WHERE code_type = 'filetypeoption' AND code_value = a.file_type) AS 课件类型, 
+    (SELECT code_name FROM sys_code_select WHERE code_type = 'status' AND code_value = a.status) AS 上下架管理,
+    COALESCE(a.time_duration, 0) AS 课件时长, 
+    tcl.learnPerson AS 参与学习人数, 
+    tcl.learnTimeSum AS 学习分钟数, 
+    tcl.learnCount AS 学习次数
+FROM 
+    lt_course_chapter a 
+JOIN 
+    lt_course_info b ON a.course_code = b.course_code
+LEFT JOIN temp_counter_trance_log tcl ON a.course_code = tcl.course_code AND a.chapter_code = tcl.chapter_code
+WHERE 
+    a.parent_chapter_code <> '0';
+
+-- 删除临时表（如果需要）
+DROP TABLE temp_counter_trance_log;
