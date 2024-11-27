@@ -15,7 +15,7 @@ function Card() {
             <img className='card-img' src={ProfileYep} alt="profile picture"></img>
             <img className='card-img' src={Artpicture} alt="profile picture"></img>
             <h2 className='card-h2'>FK U</h2>
-            <p className='card-p'>Fuck you liulei</p>
+            <p className='card-p'>cccccccccc</p>
         </div>
     )
 }
