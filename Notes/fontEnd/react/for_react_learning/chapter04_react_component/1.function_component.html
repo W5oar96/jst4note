@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>函数式组件</title>
+</head>
+<body>
+    <!--准备好一个容器-->
+    <div id="test"></div>
+
+    <!--引入react核心库-->
+    <script type="text/javascript" src="../JS/react.development.js"></script>
+    <!--引入react-dom,用于支持React操作DOM-->
+    <script type="text/javascript" src="../JS/react-dom.development.js"></script>
+    <!--引入babel，用于将jsx转化为js，es6转化为es5-->
+    <script type="text/javascript" src="../JS/babel.min.js"></script>
+
+    <script type="text/babel"> /*此处一定要写babel，不写默认为js*/
+    //1、创建函数式组件
+    //首字母要大写
+    function MyComponent() {
+        console.log(this);//此处的this是undefined，babel编译后开启了严格模式
+        return <h2>函数式组件定义</h2>
+    }
+    //2、渲染组件到页面
+    //标签要闭合，标签的首字母要大写
+    ReactDOM.render(<MyComponent/>,document.getElementById('test'))
+    /*
+        执行了ReactDOM.render(<MyComponent/>,document.getElementById('test'))之后：
+        Ⅰ、React解析组件标签，找到MyComponent组件；
+        Ⅱ、发现组件是使用函数定义的，随后调用该函数；
+        Ⅲ、将返回的虚拟DOM转为真实DOM，随后呈现在页面中。
+    */
+    </script>
+</body>
+</html>
