@@ -743,7 +743,6 @@ SELECT
 	job_position 岗位,
 	part_time_job_position 兼职岗位,
 CASE
-		
 		WHEN label_id = '1DFCEEB5D013497FE0635C14090AF841' THEN
 		'王朝直营' 
 		WHEN label_id = '1DFC1FA93668BB5AE0635C14090A817B' THEN
@@ -1109,3 +1108,104 @@ union
 select '经销商' 类型,b.name 品牌,to_char(c.created_date, 'YYYY-MM-DD') 日期,count(distinct login) 活跃人数 from lt_student_info a ,sys_manage_com b,sys_session c where agent_state = '01' and substr(a.manage_com,0,6) = b.manage_com and b.short_name in( '腾势','方程豹经销商') and a.train_code = c.login and c.created_date >= '2024-11-01' group by substr(a.manage_com,0,6),b.name,to_char(c.created_date, 'YYYY-MM-DD')
 ) 
 q order by 类型,品牌;
+
+
+------考试数据按编码查询------
+SELECT
+    ltexamstud0_.ID,
+    ltexamstud0_.company,
+    ltexamstud0_.created_by,
+    ltexamstud0_.created_by_manage_com,
+    ltexamstud0_.created_by_manage_com_name,
+    ltexamstud0_.created_by_name,
+    ltexamstud0_.created_by_staff_code,
+    ltexamstud0_.created_date,
+    ltexamstud0_.deleted,
+    ltexamstud0_.last_modified_by,
+    ltexamstud0_.last_modified_date,
+    ltexamstud0_.all_question_count,
+    ltexamstud0_.end_time,
+    ltexamstud0_.exam_code,
+    ltexamstud0_.exam_count,
+    ltexamstud0_.exam_state,
+    ltexamstud0_.paper_mark,
+    ltexamstud0_.pass_mark,
+    ltexamstud0_.random_num,
+    ltexamstud0_.review_time,
+    ltexamstud0_.reviewer,
+    ltexamstud0_.revise_score,
+    ltexamstud0_.score,
+    ltexamstud0_.score_level,
+    ltexamstud0_.sign_name_url,
+    ltexamstud0_.start_time,
+    ltexamstud0_.status,
+    ltexamstud0_.submit_type,
+    ltexamstud0_.surplus_exam_count,
+    ltexamstud0_.test_paper_code,
+    ltexamstud0_.train_code,
+    ltexamstud0_.wrong_question_count 
+FROM
+    lt_exam_student ltexamstud0_
+    INNER JOIN lt_student_info ltstudenti1_ ON ( ltexamstud0_.train_code = ltstudenti1_.train_code ) 
+WHERE
+    ltexamstud0_.exam_code = 'AP02GROUPTE24100001' ------可替换考试编码-------
+    AND ( NULL IS NULL OR ltstudenti1_.staff_code IS NULL ) 
+    AND ( NULL IS NULL OR ltstudenti1_.NAME LIKE ( '%' || NULL || '%' ) ) 
+    AND ( NULL IS NULL OR ltexamstud0_.created_by_manage_com LIKE ( NULL || '%' ) ) 
+    AND ( NULL IS NULL OR ltexamstud0_.exam_state IS NULL ) 
+    AND ( NULL IS NULL OR ltexamstud0_.exam_count IS NULL ) 
+ORDER BY
+    ltexamstud0_.created_date DESC;
+
+
+----用户课程学习数据----
+SELECT
+    lsi.ID,
+    lsi.manage_com,
+    lsi.train_code,
+    lsi.staff_code,
+    lsi.NAME,
+    lsi.job_position,
+    lsi.employ_date,
+    lci.course_code,
+    lci.course_name,
+    lci.category_string,
+    ( SELECT COALESCE(SUM(time_duration), 0) FROM lt_course_chapter WHERE course_code = lci.course_code ) AS timeDuration,
+    (
+        SELECT d.created_date 
+        FROM counter_trance_log d 
+        WHERE d.course_code = lci.course_code 
+        AND d.train_code = lsi.train_code 
+        ORDER BY d.created_date DESC 
+        LIMIT 1 
+    ) AS lastLearnTime,
+    (
+        SELECT is_finish 
+        FROM lt_join_course_report ljcr 
+        WHERE ljcr.course_code = lci.course_code 
+        AND ljcr.source_code = lci.course_code 
+        AND ljcr.source_from = 'course' 
+        AND ljcr.train_code = lsi.train_code 
+        LIMIT 1 
+    ) AS isFinish,
+    lci.teach_way,
+    (
+        SELECT COALESCE(SUM(COALESCE(d.duration_of_this_play, 0)), 0) 
+        FROM counter_trance_log d 
+        WHERE d.course_code = lci.course_code 
+        AND d.train_code = lsi.train_code 
+    ) AS learnTimeSum 
+FROM
+    lt_student_info lsi,
+    counter_analyse_result car,
+    lt_course_info lci 
+WHERE
+    lci.course_code = car.source_code 
+    AND lsi.train_code = car.train_code 
+    AND lci.branch_type = 'B' 
+    AND (lci.course_code = CAST(NULL AS VARCHAR) OR lci.course_code IS NULL) 
+    AND (lsi.train_code = CAST(NULL AS VARCHAR) OR lsi.train_code IS NULL) 
+    AND lsi.manage_com LIKE CONCAT('A86', '%') 
+    AND (lsi.staff_code = CAST(NULL AS VARCHAR) OR lsi.staff_code IS NULL) 
+    AND (lci.course_name LIKE CONCAT('%', CAST(NULL AS VARCHAR), '%') OR lci.course_name IS NULL) 
+    AND (lsi.NAME LIKE CONCAT('%', CAST(NULL AS VARCHAR), '%') OR lsi.NAME IS NULL);
