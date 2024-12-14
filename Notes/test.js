@@ -1,277 +1,312 @@
-import React, { Fragment, PureComponent } from 'react';
+import {Button, Row, Col, Modal, Tree, Collapse, Affix, Popconfirm, message, Radio} from 'antd';
 import { connect } from 'dva';
-import { formatMessage, FormattedMessage } from 'umi/locale';
-import { Card } from 'antd';
-import AdvancedTable from '@/components/AdvancedTable';
+import React, {Fragment, PureComponent, useState} from 'react';
+import { FormattedMessage, formatMessage } from 'umi/locale';
 import commonStyle from '@/assets/styles/project.less';
-import { findValueByKey, isZh, moneyFormat } from '@/utils/utils';
-import QuerySimple from './querySimple';
-import moment from 'moment';
-import { getBusiness } from '@/utils/envUtil';
+import AdvancedTable from '@/components/AdvancedTable';
+import {dateformat, findValueByKey} from '@/utils/utils';
 
-const curBusiness = getBusiness();
+const { Panel } = Collapse;
 
-@connect(({ PlanStatement, loading, CodeSelect, LtCourseProgram }) => ({
-  PlanStatement,
-  LtCourseProgram,
+const defaultAlign = 'left';
+const defaultColWith = 170;
+
+@connect(({ CodeSelect, ResourceUseAuth, loading }) => ({
   CodeSelect,
-  loading: loading.models.PlanStatement || loading.models.LtCourseProgram,
+  ResourceUseAuth,
+  loading: loading.models.ResourceUseAuth,
 }))
-class Home extends PureComponent {
-  state = {
-    // 月份数组
-    allMonths: [],
-  };
-
-  // 页面加载时调用，经常用于初始化下拉选择的数据结构
-  componentDidMount() {
+class Index extends PureComponent {
+  constructor(props) {
+    super(props);
     const { dispatch } = this.props;
-    // 获取所有月份缩写名称的数组
-    const shortMonthNames = moment.monthsShort();
-    this.setState({
-      allMonths: shortMonthNames,
-    });
-    // 批量加载码表数据
     dispatch({
-      type: 'CodeSelect/advancecodequery',
-      queryPara: {
-        codeType: 'plantype,,traininglevel,assessmentmethod,trainingmethods',
-      },
-      callback: resp => {
-        Object.keys(resp).forEach(key => {
-          dispatch({
-            type: 'CodeSelect/codequerycallback',
-            payload: resp[key],
-            queryPara: {
-              codeType: key,
-            },
-          });
-        });
-      },
+      type: 'LtMasterProgramEnrollRule/reset',
     });
-    this.onRefresh();
+    this.state = {
+      authedComs: [],
+      isSubManageCom: 'N'
+    };
   }
 
-  onRefresh = () => {
-    const {
-      dispatch,
-      LtCourseProgram: { currData },
-      PlanStatement: { queryPara, queryParaSize },
-    } = this.props;
+  showModal = () => {
+    const { dispatch } = this.props;
 
-    if (currData.id) {
-      if (currData.monPlanCode) {
-        // 已绑定班级的，则仅查询该班级的这个计划
-        queryPara.planCode_equals = currData.monPlanCode;
-        queryPara.nomanagecom = '123';
-      } else {
-        // 班级没有计划编码。但是已经有班级编码了，那这里计划查询结果应该为空(计划外开班)
-        queryPara.planCode_equals = '2222';
-      }
-    } else {
-      // 仅查询自己机构的计划
-      queryPara.manageCom_equals = sessionStorage.getItem('managecom');
-      // queryPara.planState_equals = '01'; // 默认查询未执行的
-      delete queryPara.planCode_equals;
-    }
-
-    if (currData.trainState === '02' || currData.trainState === '03') {
-      queryPara.manageCom_equals = sessionStorage.getItem('managecom');
-      // queryPara.planState_equals = '01'; // 默认查询未执行的
-      delete queryPara.planCode_equals;
-    }
-    if (queryPara.size === queryParaSize) {
-      delete queryPara.size;
-    }
-
-    // 审批通过的
-    queryPara.auditState_equals = '11';
     dispatch({
-      type: 'PlanStatement/fetch',
-      queryPara,
+      type: 'ResourceUseAuth/switchVisible',
+      visible: true,
+    });
+
+    this.refresh();
+  };
+
+  handleCancel = type => {
+    const { dispatch, afterSubmit } = this.props;
+    dispatch({
+      type: 'ResourceUseAuth/switchVisible',
+      visible: false,
+    });
+    this.setState({
+      authedComs: [],
+    });
+    // 数据授权完成后的回调
+    if (type === '1' && afterSubmit) {
+      afterSubmit();
+    }
+  };
+
+  handleChange = e => {
+    this.setState({
+      isSubManageCom: e.target.value
     });
   };
 
-  // 查询表格的列定义
-  getColumns = () => {
-    const { CodeSelect } = this.props;
-    const { allMonths } = this.state;
-    const columns = [
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.planCode' }),
-        dataIndex: 'planCode',
+  refresh = () => {
+    const { dispatch, resourceType, resourceCode } = this.props;
+    dispatch({
+      type: 'ResourceUseAuth/fetch',
+      queryPara: {
+        resourceType,
+        resourceCode: resourceCode.length === 1 ? resourceCode[0] : '---', // 选中了一个，则查询出已授权的机构;选中了多个，则不加载已授权的机构，本次批量授权会覆盖之前已授权的机构
       },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.planType' }),
-        dataIndex: 'planType',
-        render: text => {
-          return findValueByKey(CodeSelect.planTypeMap, text);
-        },
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.planTitle' }),
-        dataIndex: 'planTitle',
-        hideInTable: true,
-      },
+    });
+  };
 
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.trainingLevel' }),
-        dataIndex: 'trainingLevel',
-        render: text => {
-          return findValueByKey(CodeSelect.trainingLevelMap, text);
-        },
+  onCheck = v => {
+    this.setState({
+      authedComs: v.checked,
+    });
+  };
+
+  /**
+   * 授权动作(添加或追加授权)
+   */
+  dealData = () => {
+    const { dispatch, resourceCode, resourceType } = this.props;
+    const { authedComs, isSubManageCom } = this.state;
+
+    const submitData = [];
+    if (authedComs.length > 0) {
+      resourceCode.map(item => {
+        for (let i = 0; i < authedComs.length; i += 1) {
+          submitData.push({
+            isSubManageCom,
+            resourceCode: item,
+            resourceType,
+            authedCom: authedComs[i],
+          });
+        }
+        return submitData;
+      });
+    }
+    dispatch({
+      type: 'ResourceUseAuth/useAuthBatch',
+      payload: submitData,
+      callback: () => {
+        this.handleCancel('1');
       },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.trainingObjectives' }),
-        dataIndex: 'trainingObjectives',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.plannedCourses' }),
-        dataIndex: 'plannedCourses',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.trainingMethods' }),
-        dataIndex: 'trainingMethods',
-        render: text => {
-          return findValueByKey(CodeSelect.trainingMethodsMap, text);
-        },
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.assessmentMethod' }),
-        dataIndex: 'assessmentMethod',
-        render: text => {
-          return findValueByKey(CodeSelect.assessmentMethodMap, text);
-        },
-      },
-      // {
-      //   title: formatMessage({ id: 'LtTrainPlanStatement.planPeriod' }),
-      //   dataIndex: 'planPeriod',
-      // },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.periodStart' }),
-        dataIndex: 'periodStart',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.periodEnd' }),
-        dataIndex: 'periodEnd',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.responsibleCode' }),
-        dataIndex: 'responsibleCode',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.responsibleName' }),
-        dataIndex: 'responsibleName',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.responsibleCom' }),
-        dataIndex: 'responsibleCom',
-        render: text => {
-          return findValueByKey(CodeSelect.manageComDataAllMap, text);
-        },
-      },
-      {
-        title: formatMessage({ id: 'LtTrainSetCfg.typeName' }),
-        dataIndex: 'categoryString',
-        render: text => {
-          return findValueByKey(CodeSelect.programTypeMap, text ? text.split(',')[0] : '');
-        },
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.programType' }),
-        dataIndex: 'programType',
-        width: 150,
-        render: text => {
-          return findValueByKey(CodeSelect.programTypeMap, text);
-        },
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.dueTraineeNo' }),
-        dataIndex: 'dueTraineeNo',
-        align: 'right',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.duePeriodsNo' }),
-        dataIndex: 'duePeriodsNo',
-        align: 'right',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.executedNo' }),
-        dataIndex: 'executedNo',
-        align: 'right',
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.executedProcess' }),
-        dataIndex: 'executedProcess',
-        align: 'right',
-        noSort: true,
-        render: (text, record) => {
-          return `${record.executedNo || 0} / ${record.duePeriodsNo}`;
-        },
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.dueMoney' }),
-        dataIndex: 'dueMoney',
-        hideInTable: true,
-        align: 'right',
-        render: text => {
-          return moneyFormat(text);
-        },
-      },
-      {
-        title: formatMessage({ id: 'LtTrainPlanStatement.planState' }),
-        dataIndex: 'planState',
-        fixed: 'right',
-        render: text => {
-          return CodeSelect.planStateMap[text];
-        },
-      },
-    ];
-    return columns;
+    });
   };
 
   render() {
     const {
-      PlanStatement: { data, queryPara, selectedIds },
+      ResourceUseAuth: { visible, data, queryPara },
+      CodeSelect: { allManageComTreeData, allManageComTopTree , yesOrNo, yesOrNoMap},
+      resourceCode,
       loading,
-      LtCourseProgram: { currData },
+      isDropDown,
+      isButton, // 有该值是button模式
+      dispatch,
     } = this.props;
-    const rowSelection = {
-      // 展示复选框的条件
-      canSelectOption: !(currData.trainState === '02' || currData.trainState === '03'),
-      // 选中的keys
-      selectedRowKeys: selectedIds,
-      // 不可选的条件
-      disabledOption: record => ({
-        // Column configuration not to be checked 根据实际情况处理   月度计划只能执行一次
-        // disabled: record.planType === 'month' && record.planState === '02',
-      }),
-    };
+
+    const { authedComs, isSubManageCom } = this.state;
 
     return (
-      <div className={isZh() ? commonStyle.standardList : commonStyle.standardListUs}>
-        <Fragment>
-          {// 修改信息时不能仅看表格数据即可
-            !(currData.trainState === '02' || currData.trainState === '03') && (
-            <Card bordered={false}>
-              <QuerySimple />
-            </Card>
-          )}
-          <AdvancedTable
-            namespace="PlanStatement"
-            queryPara={queryPara}
-            data={data}
-            uniqueCode="planCode"
-            columns={this.getColumns()}
-            rowSelection={rowSelection}
-            loading={loading}
-            needCreatedBy
-            rowSelectionType="radio"
-          />
-        </Fragment>
-      </div>
+      <Fragment>
+        <Modal
+          width="80%"
+          bodyStyle={{ overflowY: 'scroll', maxHeight: '80vh' }}
+          centered
+          destroyOnClose
+          title={formatMessage({ id: 'DataAuthorization' })}
+          visible={visible}
+          onCancel={() => this.handleCancel('0')}
+          footer={[
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              disabled={authedComs.length === 0}
+              key={`B_${Math.random() * 100}`}
+              onClick={() => this.dealData()}
+            >
+              <FormattedMessage id="ResourceUseAuth.addAuth" />(
+              {authedComs.length ? authedComs.length : 0})
+            </Button>,
+            <Button onClick={() => this.handleCancel('0')}>
+              <FormattedMessage id="global.closeup" />
+            </Button>,
+          ]}
+        >
+          <Collapse defaultActiveKey={['2']}>
+            {data.list.length > 0 && (
+              <Panel header={formatMessage({ id: 'ResourceUseAuth.authTrace' })} key="1">
+                <AdvancedTable
+                  namespace="ResourceUseAuth"
+                  queryPara={queryPara}
+                  data={data}
+                  columns={[
+                    {
+                      title: formatMessage({ id: 'ResourceUseAuth.authedComName' }),
+                      dataIndex: 'authedComName',
+                      width: 150,
+                    },
+                    {
+                      title: formatMessage({ id: 'ResourceUseAuth.components.isSubManageCom' }),
+                      dataIndex: 'isSubManageCom',
+                      width: 50,
+                      align: 'center',
+                      render: text => {
+                        return findValueByKey(yesOrNoMap, text);
+                      },
+                    },
+                    {
+                      title: formatMessage({ id: 'ResourceUseAuth.createdByManageComName' }),
+                      dataIndex: 'createdByManageComName',
+                      align: defaultAlign,
+                      width: 300,
+                    },
+                    {
+                      title: formatMessage({ id: 'ResourceUseAuth.createdByName' }),
+                      dataIndex: 'createdByName',
+                      align: defaultAlign,
+                      width: defaultColWith,
+                      render: (text, record) => {
+                        if (record.createdByStaffCode) {
+                          return `${record.createdByStaffCode}-${record.createdByName}`;
+                        }
+                        return `${record.createdByName}`;
+                      },
+                    },
+                    {
+                      title: formatMessage({ id: 'ResourceUseAuth.createdDate' }),
+                      dataIndex: 'createdDate',
+                      align: defaultAlign,
+                      width: defaultColWith,
+                      render: text => {
+                        return dateformat(text);
+                      },
+                    },
+                    {
+                      title: formatMessage({ id: 'global.operate' }),
+                      dataIndex: 'global.operate',
+                      align: defaultAlign,
+                      width: 120,
+                      render: (text, record) => (
+                        <Fragment>
+                          <a
+                            onClick={() =>
+                              dispatch({
+                                type: 'ResourceUseAuth/removeAuth',
+                                payload: record,
+                                callback: () => {
+                                  this.refresh();
+                                },
+                              })
+                            }
+                          >
+                            <FormattedMessage id="ResourceUseAuth.removeAuth" />
+                          </a>
+                        </Fragment>
+                      ),
+                    },
+                  ]}
+                  rowSelection={{
+                    // 展示复选框的条件
+                    canSelectOption: false,
+                    // 选中的keys
+                    selectedRowKeys: [],
+                    // 不可选的条件
+                    disabledOption: () => ({
+                      // Column configuration not to be checked 根据实际情况处理
+                    }),
+                  }}
+                  loading={loading}
+                  hideTitle
+                  hideExtra
+                  disabledSort
+                />
+              </Panel>
+            )}
+            <Panel header={formatMessage({ id: 'ResourceUseAuth.addAuth' })} key="2">
+              <Row gutter={10}>
+                <Col span={8}>
+                  <div className={commonStyle.desc} style={{ padding: 10 }}>
+                    <h4>{formatMessage({ id: 'ResourceUseAuth.components.desc' })}</h4>
+                    <ul>
+                      <li>
+                        <p>{formatMessage({ id: 'ResourceUseAuth.components.p1' })}</p>
+                      </li>
+                      <li>
+                        {formatMessage({ id: 'ResourceUseAuth.components.isSubManageCom' })}：
+                        <Radio.Group value={isSubManageCom} onChange={this.handleChange}>
+                          {yesOrNo.map(item => (
+                            <Radio key={item.codeValue} value={item.codeValue}>
+                              {item.codeName}
+                            </Radio>
+                          ))}
+                        </Radio.Group>
+                      </li>
+                    </ul>
+                  </div>
+                </Col>
+                <Col span={10}>
+                  <Tree
+                    checkable
+                    checkStrictly
+                    onCheck={this.onCheck}
+                    defaultExpandedKeys={allManageComTopTree}
+                    checkedKeys={authedComs}
+                    treeData={allManageComTreeData}
+                  />
+                </Col>
+              </Row>
+            </Panel>
+          </Collapse>
+        </Modal>
+        {isDropDown ? (
+          <>
+            {isButton ? (
+              <Button
+                type="primary"
+                loading={loading}
+                disabled={resourceCode.length === 0}
+                key={`B_${Math.random() * 1001}`}
+                onClick={() => this.showModal()}
+              >
+                {<FormattedMessage id="DataAuthorization" />}({resourceCode.length})
+              </Button>
+            ) : (
+              <a onClick={() => this.showModal()}>
+                <FormattedMessage id="DataAuthorization" />({resourceCode.length})
+              </a>
+            )}
+          </>
+        ) : (
+          <Button
+            style={{ margin: '0 4px' }}
+            icon="cluster"
+            type="primary"
+            key={`B_${Math.random() * 100}`}
+            disabled={resourceCode.length === 0}
+            onClick={() => this.showModal()}
+          >
+            <FormattedMessage id="DataAuthorization" />({resourceCode.length})
+          </Button>
+        )}
+      </Fragment>
     );
   }
 }
 
-export default Home;
+export default Index;
