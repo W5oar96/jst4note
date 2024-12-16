@@ -1063,3 +1063,16 @@ JOIN lt_course_set_student lcss ON lcs.course_set_code = lcss.course_set_code WH
 AS varchar)) AND (COALESCE(NULL, 'null') = 'null' OR jcr.begin_learn_time >= NULL) AND (COALESCE(NULL, 
 'null') = 'null' OR jcr.begin_learn_time <= NULL) ) jcr order by jcr."createdDate" desc limit 
 10 ;
+
+
+----课程点击量学习人数修正---
+update lt_course_info set 
+view_count = (select count(1) from lt_interact_record where source_from = 'course' and source_code = lt_course_info.course_code and interact_type = 'click'),
+collection_count = (select count(1) from lt_interact_record where source_from = 'course' and source_code = lt_course_info.course_code and interact_type = 'collect'),
+like_count = (select count(1) from lt_interact_record where source_from = 'course' and source_code = lt_course_info.course_code and interact_type = 'like'),
+learn_count = (select count(1) from lt_join_course_report where course_code = lt_course_info.course_code) ;
+                                                                                                        
+update lt_notice_info set 
+view_count = (select count(1) from lt_interact_record where source_from = 'notice' and source_code = lt_notice_info.notice_code and interact_type = 'click');
+                                                                                                                                                                                                                
+                                                                                                        
