@@ -1075,4 +1075,55 @@ learn_count = (select count(1) from lt_join_course_report where course_code = lt
 update lt_notice_info set 
 view_count = (select count(1) from lt_interact_record where source_from = 'notice' and source_code = lt_notice_info.notice_code and interact_type = 'click');
                                                                                                                                                                                                                 
-                                                                                                        
+-----视频切片查询-----
+select * from file_info where id in (select file_id from lt_course_chapter where course_code = '003-03-000003' and deleted = false and status = '1')
+-- 4478
+-- tms/202408/VhAt8UKW6lDd2K922gGZeqRvnF8AdF.mp4
+select * from lt_m3u8   where code = 'VhAt8UKW6lDd2K922gGZeqRvnF8AdF'
+
+
+
+
+
+select * from (select (select code_name from lt_business_code_select where code_type = 'labelid' and code_value = lt_student_info.label_id) 品牌,count(1) 在职人数,sum(case when last_login_time >= '2024-08-30' and last_login_time <= '2024-09-05' then 1 else 0 end) 最近7天登录人数 from lt_student_info where agent_state = '01' and label_id <> '' group by label_id
+
+union
+select b.name 品牌,count(1) 在职人数,sum(case when last_login_time >= '2024-08-30' and last_login_time <= '2024-09-05' then 1 else 0 end) 最近7天登录人数 from lt_student_info a ,sys_manage_com b where agent_state = '01' and substr(a.manage_com,0,12) = b.manage_com and b.short_name in ('王朝网','海洋网','腾势销售','方程豹','仰望','王朝网经销商','海洋网经销商') group by substr(a.manage_com,0,12),b.name
+
+union
+select b.name 品牌,count(1) 在职人数,sum(case when last_login_time >= '2024-08-30' and last_login_time <= '2024-09-05' then 1 else 0 end) 最近7天登录人数 from lt_student_info a ,sys_manage_com b where agent_state = '01' and substr(a.manage_com,0,6) = b.manage_com and b.short_name in( '腾势经销商') group by substr(a.manage_com,0,6),b.name) q order by 品牌;
+
+
+-----铁军特供------
+-----月活越数据------
+select * from (
+select '品牌标签' 类型,(select code_name from lt_business_code_select where code_type = 'labelid' and code_value = a.label_id) 品牌,count(1) 在职人数,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-09') then 1 else 0 end) 活跃人数9月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-10') then 1 else 0 end) 活跃人数10月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-11') then 1 else 0 end) 活跃人数11月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-12') then 1 else 0 end) 活跃人数12月
+from lt_student_info a where agent_state = '01' and label_id <> '' group by label_id
+union
+select '直营' 类型,b.name 品牌,count(1) 在职人数,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-09') then 1 else 0 end) 活跃人数9月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-10') then 1 else 0 end) 活跃人数10月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-11') then 1 else 0 end) 活跃人数11月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-12') then 1 else 0 end) 活跃人数12月
+from lt_student_info a ,sys_manage_com b where agent_state = '01' and substr(a.manage_com,0,12) = b.manage_com and b.short_name in ('王朝网','海洋网','腾势销售','方程豹','仰望','王朝网经销商','海洋网经销商') group by substr(a.manage_com,0,12),b.name
+union
+select '经销商' 类型,b.name 品牌,count(1) 在职人数,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-09') then 1 else 0 end) 活跃人数9月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-10') then 1 else 0 end) 活跃人数10月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-11') then 1 else 0 end) 活跃人数11月,
+sum(case when exists(select 1 from sys_session c where c.login = a.train_code and to_char(c.created_date, 'YYYY-MM') = '2024-12') then 1 else 0 end) 活跃人数12月
+from lt_student_info a ,sys_manage_com b where agent_state = '01' and substr(a.manage_com,0,6) = b.manage_com and b.short_name in( '腾势','方程豹经销商') group by substr(a.manage_com,0,6),b.name) 
+q order by 类型,品牌;
+
+-----日活跃数据------
+select * from (
+select '品牌标签' 类型,(select code_name from lt_business_code_select where code_type = 'labelid' and code_value = a.label_id) 品牌,to_char(c.created_date, 'YYYY-MM-DD') 日期,count(distinct login) 活跃人数 from lt_student_info a,sys_session c where agent_state = '01' and label_id <> '' and a.train_code = c.login and c.created_date >= '2024-09-01' and c.created_date < '2025-01-01' group by label_id,to_char(c.created_date, 'YYYY-MM-DD')
+union
+select '直营' 类型,b.name 品牌,to_char(c.created_date, 'YYYY-MM-DD') 日期,count(distinct login) 活跃人数 from lt_student_info a ,sys_manage_com b,sys_session c where agent_state = '01' and substr(a.manage_com,0,12) = b.manage_com and b.short_name in ('王朝网','海洋网','腾势销售','方程豹','仰望','王朝网经销商','海洋网经销商')  and a.train_code = c.login and c.created_date >= '2024-09-01' and c.created_date < '2025-01-01' group by substr(a.manage_com,0,12),b.name,to_char(c.created_date, 'YYYY-MM-DD')
+union
+select '经销商' 类型,b.name 品牌,to_char(c.created_date, 'YYYY-MM-DD') 日期,count(distinct login) 活跃人数 from lt_student_info a ,sys_manage_com b,sys_session c where agent_state = '01' and substr(a.manage_com,0,6) = b.manage_com and b.short_name in( '腾势','方程豹经销商') and a.train_code = c.login and c.created_date >= '2024-09-01' and c.created_date < '2025-01-01' group by substr(a.manage_com,0,6),b.name,to_char(c.created_date, 'YYYY-MM-DD')) 
+q order by 类型,品牌;
