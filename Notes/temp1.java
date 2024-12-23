@@ -36,6 +36,7 @@
                     syncStudent.setMobile(null);
                 }
                 String employDate = syncStudent.getCreatedAt();
+
                 //拷贝到新对象中，防止修改的时候直接修改数据库
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -87,7 +88,7 @@
                 // company 需要处理
                 ltStudentInfoNew.setCompany("byd-group");
 //                ltStudentInfoNew.setAgentGrade(syncStudent.getPost());
-                if(ObjectUtil.isNull(allLtStudentMap.get(syncStudent.getIdNumber()))){
+                if(ObjectUtil.isNull(allLtStudentMap.get(syncStudent.getUserid()))){
                     if("BYD-DingMingYue".equals(ltStudentInfoNew.getStaffCode())){
                         String trainCode = syncStudent.getUuid().replace("-","");
                         trainCode=trainCode.replace(trainCode.charAt(trainCode.length()-1)+"","1");
@@ -123,22 +124,6 @@
                         ltStudentInfoNew.setCreatedByName(oldStudent.getCreatedByName());
                         ltStudentInfoNew.setCreatedByStaffCode(oldStudent.getCreatedByStaffCode());
                         ltStudentInfoNew.setCreatedDate(oldStudent.getCreatedDate());
-                        batchUpdateData.add(ltStudentInfoNew);
-                    } else if("1".equals(oldStudent.getStuFlag())){
-                        ltStudentInfoNew.setId(oldStudent.getId());
-                        ltStudentInfoNew.setTrainCode(oldStudent.getTrainCode());
-                        ltStudentInfoNew.setCreatedBy(oldStudent.getCreatedBy());
-                        ltStudentInfoNew.setCreatedByName(oldStudent.getCreatedByName());
-                        ltStudentInfoNew.setCreatedByStaffCode(oldStudent.getCreatedByStaffCode());
-                        ltStudentInfoNew.setCreatedDate(oldStudent.getCreatedDate());
-                        ltStudentInfoNew.setQwUserId(syncStudent.getEmployeeNumber());
-                        ltStudentInfoNew.setManageComName(syncStudent.getDepartment());
-                        ltStudentInfoNew.setManageCom(ObjectUtil.isNotNull(manageComMap.get(String.valueOf(syncStudent.getDepartmentId())))?manageComMap.get(String.valueOf(syncStudent.getDepartmentId())).getManageCom():String.valueOf(syncStudent.getDepartmentId()));
-                        ltStudentInfoNew.setCreatedByManageCom(ObjectUtil.isNotNull(manageComMap.get(String.valueOf(syncStudent.getDepartmentId())))?manageComMap.get(String.valueOf(syncStudent.getDepartmentId())).getManageCom():String.valueOf(syncStudent.getDepartmentId()));
-                        ltStudentInfoNew.setCreatedByManageComName(ObjectUtil.isNotNull(manageComMap.get(String.valueOf(syncStudent.getDepartmentId())))?manageComMap.get(String.valueOf(syncStudent.getDepartmentId())).getFullName():String.valueOf(syncStudent.getDepartmentId()));
-                        ltStudentInfoNew.setPhone(syncStudent.getMobile());
-                        ltStudentInfoNew.seteMail(syncStudent.getEmail());
-                        ltStudentInfoNew.setJobPosition(syncStudent.getPost());
                         batchUpdateData.add(ltStudentInfoNew);
                     }
 
