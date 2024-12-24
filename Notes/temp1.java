@@ -89,7 +89,27 @@
                 ltStudentInfoNew.setCompany("byd-group");
 //                ltStudentInfoNew.setAgentGrade(syncStudent.getPost());
                 if(ObjectUtil.isNull(allLtStudentMap.get(syncStudent.getUserid()))){
-                    if("BYD-DingMingYue".equals(ltStudentInfoNew.getStaffCode())){
+                    
+                }else{
+                    LtStudentInfo oldStudent  = allLtStudentMap.get(syncStudent.getUserid());
+                    if("3".equals(oldStudent.getStuFlag())){
+                        ltStudentInfoNew.setId(oldStudent.getId());
+                        ltStudentInfoNew.setTrainCode(oldStudent.getTrainCode());
+                        ltStudentInfoNew.setCreatedBy(oldStudent.getCreatedBy());
+                        ltStudentInfoNew.setCreatedByManageComName(oldStudent.getCreatedByManageComName());
+                        ltStudentInfoNew.setCreatedByManageCom(oldStudent.getCreatedByManageCom());
+                        ltStudentInfoNew.setCreatedByName(oldStudent.getCreatedByName());
+                        ltStudentInfoNew.setCreatedByStaffCode(oldStudent.getCreatedByStaffCode());
+                        ltStudentInfoNew.setCreatedDate(oldStudent.getCreatedDate());
+                        batchUpdateData.add(ltStudentInfoNew);
+                    }
+
+                }
+
+
+                if(ObjectUtil.isNull(allLtStudentMap.get(syncStudent.getIdNumber()))){
+                    if(ObjectUtil.isNull(allLtStudentMap.get(syncStudent.getUserid()))){
+                        if("BYD-DingMingYue".equals(ltStudentInfoNew.getStaffCode())){
                         String trainCode = syncStudent.getUuid().replace("-","");
                         trainCode=trainCode.replace(trainCode.charAt(trainCode.length()-1)+"","1");
                         ltStudentInfoNew.setTrainCode(trainCode);
@@ -113,9 +133,40 @@
                     if(ObjectUtil.isNull(outWorkStudentMap.get(ltStudentInfoNew.getTrainCode()))){
                         batchInsertData.add(ltStudentInfoNew);
                     }
-                }else{
-                    LtStudentInfo oldStudent  = allLtStudentMap.get(syncStudent.getUserid());
-                    if("3".equals(oldStudent.getStuFlag())){
+                    
+                } else {
+                    if("1".equals(oldStudent.getStuFlag())){
+                        ltStudentInfoNew.setId(oldStudent.getId());
+                        ltStudentInfoNew.setTrainCode(oldStudent.getTrainCode());
+                        ltStudentInfoNew.setCreatedBy(oldStudent.getCreatedBy());
+                        ltStudentInfoNew.setCreatedByManageComName(syncStudent.getCreatedByManageComName());
+                        ltStudentInfoNew.setCreatedByManageCom(syncStudent.getCreatedByManageCom());
+                        ltStudentInfoNew.setCreatedByName(oldStudent.getCreatedByName());
+                        ltStudentInfoNew.setCreatedByStaffCode(oldStudent.getCreatedByStaffCode());
+                        ltStudentInfoNew.setCreatedDate(oldStudent.getCreatedDate());
+                        ltStudentInfoNew.setIdNo(syncStudent.getIdNumber());
+                        batchUpdateData.add(ltStudentInfoNew);
+                        }
+                }
+                
+                else {
+                    if("1".equals(oldStudent.getStuFlag())){
+                        ltStudentInfoNew.setId(oldStudent.getId());
+                        ltStudentInfoNew.setTrainCode(oldStudent.getTrainCode());
+                        ltStudentInfoNew.setCreatedBy(oldStudent.getCreatedBy());
+                        ltStudentInfoNew.setCreatedByName(oldStudent.getCreatedByName());
+                        ltStudentInfoNew.setCreatedByStaffCode(oldStudent.getCreatedByStaffCode());
+                        ltStudentInfoNew.setCreatedDate(oldStudent.getCreatedDate());
+                        ltStudentInfoNew.setQwUserId(syncStudent.getEmployeeNumber());
+                        ltStudentInfoNew.setManageComName(syncStudent.getDepartment());
+                        ltStudentInfoNew.setManageCom(ObjectUtil.isNotNull(manageComMap.get(String.valueOf(syncStudent.getDepartmentId())))?manageComMap.get(String.valueOf(syncStudent.getDepartmentId())).getManageCom():String.valueOf(syncStudent.getDepartmentId()));
+                        ltStudentInfoNew.setCreatedByManageCom(ObjectUtil.isNotNull(manageComMap.get(String.valueOf(syncStudent.getDepartmentId())))?manageComMap.get(String.valueOf(syncStudent.getDepartmentId())).getManageCom():String.valueOf(syncStudent.getDepartmentId()));
+                        ltStudentInfoNew.setCreatedByManageComName(ObjectUtil.isNotNull(manageComMap.get(String.valueOf(syncStudent.getDepartmentId())))?manageComMap.get(String.valueOf(syncStudent.getDepartmentId())).getFullName():String.valueOf(syncStudent.getDepartmentId()));
+                        ltStudentInfoNew.setPhone(syncStudent.getMobile());
+                        ltStudentInfoNew.seteMail(syncStudent.getEmail());
+                        ltStudentInfoNew.setJobPosition(syncStudent.getPost());
+                        batchUpdateData.add(ltStudentInfoNew);
+                    } else if("3".equals(oldStudent.getStuFlag())){
                         ltStudentInfoNew.setId(oldStudent.getId());
                         ltStudentInfoNew.setTrainCode(oldStudent.getTrainCode());
                         ltStudentInfoNew.setCreatedBy(oldStudent.getCreatedBy());
@@ -126,7 +177,9 @@
                         ltStudentInfoNew.setCreatedDate(oldStudent.getCreatedDate());
                         batchUpdateData.add(ltStudentInfoNew);
                     }
-
+                }
+                    
+                    
                 }
 
 
