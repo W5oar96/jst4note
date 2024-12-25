@@ -677,7 +677,6 @@ CASE
 lcpe.finish_state AS "finishState",
 	( SELECT CAST ( SUM ( T.actual_course_hours ) AS FLOAT ) FROM lt_course_program_schedule T WHERE T.program_code = lcp.program_code ) AS "累计学时",
 CASE
-		
 		WHEN lcpe.finish_state = '00' THEN
 		'进行中' 
 		WHEN lcpe.finish_state = '01' THEN
