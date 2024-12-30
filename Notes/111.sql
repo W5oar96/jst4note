@@ -1127,3 +1127,11 @@ select '直营' 类型,b.name 品牌,to_char(c.created_date, 'YYYY-MM-DD') 日�
 union
 select '经销商' 类型,b.name 品牌,to_char(c.created_date, 'YYYY-MM-DD') 日期,count(distinct login) 活跃人数 from lt_student_info a ,sys_manage_com b,sys_session c where agent_state = '01' and substr(a.manage_com,0,6) = b.manage_com and b.short_name in( '腾势','方程豹经销商') and a.train_code = c.login and c.created_date >= '2024-09-01' and c.created_date < '2025-01-01' group by substr(a.manage_com,0,6),b.name,to_char(c.created_date, 'YYYY-MM-DD')) 
 q order by 类型,品牌;
+
+
+
+----视频切片是否有错误-----
+select * from file_info where id in (select file_id from lt_course_chapter where course_code = '003-03-000003' and deleted = false and status = '1')
+-- 4478
+-- tms/202408/VhAt8UKW6lDd2K922gGZeqRvnF8AdF.mp4
+select * from lt_m3u8   where code = 'VhAt8UKW6lDd2K922gGZeqRvnF8AdF'
