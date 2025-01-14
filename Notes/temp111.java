@@ -1,479 +1,499 @@
-package com.sinosoft.ss.controller.tiejun;
+package com.sinosoft.ss.service;
 
-import cn.hutool.core.util.ObjectUtil;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.sinosoft.constant.ConstantField;
-import com.sinosoft.domain.LtBusinessCodeSelect;
-import com.sinosoft.domain.LtStudentInfo;
-import com.sinosoft.domain.SyncTjStudent;
-import com.sinosoft.repository.LtBusinessCodeSelectRepository;
-import com.sinosoft.repository.LtStudentInfoRepository;
-import com.sinosoft.service.BatchService;
-import com.sinosoft.ss.service.tiejun.SsSyncTJJingGuanService;
-import com.sinosoft.utils.NError;
-import com.sinosoft.utils.RedisUtil;
-import com.xxl.job.core.context.XxlJobHelper;
-import com.xxl.job.core.handler.annotation.XxlJob;
-import io.swagger.annotations.Api;
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
+import com.sinosoft.domain.FileInfo;
+import com.sinosoft.domain.LtCourseInfo;
+import com.sinosoft.domain.es.CourseInfoEntity;
+import com.sinosoft.domain.es.SearchFormData;
+import com.sinosoft.domain.es.SearchQuery;
+import com.sinosoft.repository.LtCourseInfoRepository;
+import com.sinosoft.service.dto.LtCourseInfoDTO;
+import com.sinosoft.service.vo.es.QueryForm;
+import com.sinosoft.service.vo.es.SearchDTO;
+import com.sinosoft.service.vo.es.SearchVO;
+import com.sinosoft.ss.vo.PubRespInfoModel;
+import com.sinosoft.utils.StringUtils;
+import io.searchbox.client.JestClient;
+import io.searchbox.client.JestResult;
+import io.searchbox.core.*;
+import liquibase.pro.packaged.O;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+
 /**
- * REST controller for managing {@link com.sinosoft.domain.SyncDict}.
+ * Service Implementation for managing {@link FileInfo}.
  *
  * @author sinochx-trainadmin
  * @date 2023/01/01
  */
-@RestController
-@Api(tags = "同步铁军经管")
-@RequestMapping("/sync/tj")
-public class SsSyncTJJingGuanResource {
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class ElasticsearchService {
 
-    private final Logger logger = LoggerFactory.getLogger(SsSyncTJJingGuanResource.class);
+    private final Logger log = LoggerFactory.getLogger(ElasticsearchService.class);
 
-    @Autowired
-    private SsSyncTJJingGuanService ssSyncTJJingGuanService;
+    private static final String HIGHLIGHT_PRE_TAGS = "<span class='highlight'>";
 
-    @Autowired
-    private LtBusinessCodeSelectRepository ltBusinessCodeSelectRepository;
+    private static final String HIGHLIGHT_POST_TAGS = "</span>";
 
-    @Autowired
-    private LtStudentInfoRepository ltStudentInfoRepository;
+    private static final String PINYIN_SUFFIX = ".pinyin";
 
-    @Autowired
-    private BatchService batchService;
+    private static final String[] FUZZY_FIELD_NAME = {"courseName","courseKeys"};//模糊匹配字段
+
+    private static final String MUST_FIELD_NAME = "courseCode.keyword";//精准匹配字段
 
     @Autowired
-    private RedisUtil redisUtil;
+    private JestClient jestClient;
 
-    /**
-     * 获取token
-     * @param paramMap
-     * @return
-     */
-    @GetMapping("/syncJingGuanGetToken")
-    @XxlJob("syncJingGuanGetToken")
-    public NError syncJingGuan(Map<String, String> paramMap) {
-        ssSyncTJJingGuanService.syncJingGuanGetToken(paramMap);
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
+
+    @Autowired
+    private LtCourseInfoRepository ltCourseInfoRepository;
+
+
+    public void createIndex(String indexName) throws IOException {
+        //1.创建索引请求
+        CreateIndexRequest request = new CreateIndexRequest(indexName);
+        //2.客户端执行请求IndicesClient，执行create方法创建索引，请求后获得响应
+        CreateIndexResponse response = restHighLevelClient.indices().create(request, RequestOptions.DEFAULT);
+        System.out.println(response);
     }
 
-    /**
-     * 全量同步机构
-     * @param paramMap
-     * @return
-     */
-    @GetMapping("/syncJingGuanAllOrg")
-    @XxlJob("syncJingGuanAllOrg")
-    public NError syncJingGuanAllOrg(Map<String, String> paramMap) {
-        ssSyncTJJingGuanService.syncJingGuanAllOrg(null);
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-    }
-
-    /**
-     * 机构增量更新
-     * @param paramMap
-     * @return
-     */
-    @GetMapping("/syncInsertAndUpdateOrg")
-    @XxlJob("syncInsertAndUpdateOrg")
-    public NError syncInsertAndUpdateOrg(Map<String, String> paramMap) {
-        ssSyncTJJingGuanService.syncInsertAndUpdateOrg("create",null);
-        ssSyncTJJingGuanService.syncInsertAndUpdateOrg("update",null);
-        ssSyncTJJingGuanService.syncInsertAndUpdateOrg("delete",null);
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-    }
-
-    /**
-     * 手动同步机构增量更新
-     * @return
-     */
-    @GetMapping("/handSyncInsertAndUpdateOrg")
-    @XxlJob("handSyncInsertAndUpdateOrg")
-    public NError handSyncInsertAndUpdateOrg() {
-        String dateString = XxlJobHelper.getJobParam();
-        // 指定的日期格式的正则表达式
-        String pattern = "\\d{4}-\\d{1,2}-\\d{1,2}\\|\\d{4}-\\d{1,2}-\\d{1,2}";
-
-        // 创建 Pattern 对象
-        Pattern r = Pattern.compile(pattern);
-
-        // 创建 Matcher 对象
-        Matcher m = r.matcher(dateString);
-        if(ObjectUtil.isNotNull(dateString) ||m.matches()){
-            logger.info(">>>>>>>>>>>>>接收格式正确：{}<<<<<<<<<<<<<",dateString);
-            ssSyncTJJingGuanService.handSyncInsertAndUpdateOrg(dateString);
-            return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-
-        }else{
-            logger.info("=============接收格式错误：{}==============",dateString);
-            return new NError(ConstantField.ERROR_CODE, NError.NO_RESULT);
-
+    public PubRespInfoModel dataToEsSync(String indexName) throws IOException {
+        PubRespInfoModel infoModel = new PubRespInfoModel();
+        infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
+        indexName = CourseInfoEntity.INDEX_NAME;
+        if(!existIndex(indexName)){
+            //1.创建索引请求
+            CreateIndexRequest request = new CreateIndexRequest(indexName);
+            //2.客户端执行请求IndicesClient，执行create方法创建索引，请求后获得响应
+            CreateIndexResponse response = restHighLevelClient.indices().create(request, RequestOptions.DEFAULT);
         }
+        List<LtCourseInfo> all = ltCourseInfoRepository.findAll();
+
+        return saveEntity(all);
+    }
+
+    public boolean existIndex(String indexName) throws IOException {
+        //1.查询索引请求
+        GetIndexRequest request=new GetIndexRequest(indexName);
+        //2.执行exists方法判断是否存在
+        return restHighLevelClient.indices().exists(request, RequestOptions.DEFAULT);
+    }
+
+
+    public void testDeleteIndex() throws IOException {
+        //1.删除索引请求
+        DeleteIndexRequest request=new DeleteIndexRequest("ljx666");
+        //执行delete方法删除指定索引
+        AcknowledgedResponse delete = restHighLevelClient.indices().delete(request, RequestOptions.DEFAULT);
+        System.out.println(delete.isAcknowledged());
     }
 
     /**
-     * 全量同步学员信息
-     * @param paramMap
-     * @return
+     * 批量保存内容到ES
      */
-    @GetMapping("/syncJingGuanAllStudent")
-    @XxlJob("syncJingGuanAllStudent")
-    public NError syncJingGuanAllStudent(Map<String, String> paramMap) {
-        Integer currentPage = 1;
-        JSONObject fDataJson = ssSyncTJJingGuanService.getJSONArrayStudent(1);
-        JSONArray fData = (JSONArray) fDataJson.get("data");
-        Integer countPage = (Integer) fDataJson.get("countPage");
-        List<SyncTjStudent> syncTjStudents = ssSyncTJJingGuanService.insterSyncStudentData(fData,currentPage);
-        System.out.println("countPage:"+countPage+"页");
-        for(int i = 1;currentPage <= countPage ;i++){
-            currentPage++;
-            logger.info("==============开始获取第{}页数据=============",currentPage);
 
-            JSONObject otherDataJson = ssSyncTJJingGuanService.getJSONArrayStudent(currentPage);
-            JSONArray otherData = (JSONArray) otherDataJson.get("data");
-            if (ObjectUtil.isNull(otherData)){
-                logger.debug("======当前token失效======");
-                ssSyncTJJingGuanService.syncJingGuanGetToken(null);
-                logger.debug("======token已生成，重新获取当前"+ currentPage +"页数据======");
+    public PubRespInfoModel saveEntity(long id, String name) {
+        PubRespInfoModel infoModel = new PubRespInfoModel();
+        infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
 
-                JSONObject otherDataJson1 = ssSyncTJJingGuanService.getJSONArrayStudent(currentPage);
-                otherData = (JSONArray) otherDataJson1.get("data");
-                logger.debug("datas:{}",otherData.size());
-            }
-            List<SyncTjStudent> syncTjStudents2 = ssSyncTJJingGuanService.insterSyncStudentData(otherData,currentPage);
-            syncTjStudents.addAll(syncTjStudents2);
-            if (currentPage%10 == 0){
-                logger.info("第{}页-第{}页数据开始同步",currentPage-9,currentPage);
-                batchService.batchInsert(syncTjStudents);
-                syncTjStudents.clear();
-            }else if (currentPage == countPage){
-                logger.info("第{}页-第{}页数据开始同步",currentPage-countPage%10,currentPage);
-                batchService.batchInsert(syncTjStudents);
-                syncTjStudents.clear();
-            }
+        CourseInfoEntity newEntity = new CourseInfoEntity(id,name);
+        List<CourseInfoEntity> entityList = new ArrayList<>();
+        entityList.add(newEntity);
+
+        Bulk.Builder bulk = new Bulk.Builder();
+        for(CourseInfoEntity entity : entityList) {
+            Index index = new Index.Builder(entity).index(CourseInfoEntity.INDEX_NAME).type(CourseInfoEntity.TYPE).build();
+            bulk.addAction(index);
         }
 
-        logger.debug("数据落地完毕");
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
+        try {
+            BulkResult execute = jestClient.execute(bulk.build());
+            log.info("ES 插入完成");
+            infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+            infoModel.setMsg("操作成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+            infoModel.setMsg(e.getMessage());
+            log.error(e.getMessage());
+        }
+        return infoModel;
+    }
+
+    public PubRespInfoModel saveEntity(List<LtCourseInfo> entityList) {
+        PubRespInfoModel infoModel = new PubRespInfoModel();
+        infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
+
+        Bulk.Builder bulk = new Bulk.Builder();
+        for(LtCourseInfo entity : entityList) {
+            Index index = new Index.Builder(entity).index(CourseInfoEntity.INDEX_NAME).type(CourseInfoEntity.TYPE).build();
+            bulk.addAction(index);
+        }
+
+        try {
+            BulkResult execute = jestClient.execute(bulk.build());
+            log.info("ES 插入完成");
+            infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+            infoModel.setMsg("操作成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+            infoModel.setMsg(e.getMessage());
+            log.error(e.getMessage());
+        }
+        return infoModel;
     }
 
     /**
-     * 学员数据同步
-     * @param paramMap
-     * @return
+     * 在ES中搜索内容
      */
-    @GetMapping("/syncLtStudentInfo")
-    @XxlJob("syncLtStudentInfo")
-    public NError syncLtStudentInfo(Map<String, String> paramMap) {
+    public PubRespInfoModel searchEntity(HttpServletRequest request, SearchQuery searchQuery){
+        PubRespInfoModel infoModel = new PubRespInfoModel();
+        infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
+
+        String device = request.getHeader("X-Device");
+
+        // 创建SearchSourceBuilder并设置查询
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        BoolQueryBuilder qb = QueryBuilders.boolQuery();
+
+        // 添加模糊查询条件
+        MultiMatchQueryBuilder fuzzyQuery = QueryBuilders.multiMatchQuery(searchQuery.getKeywords(), FUZZY_FIELD_NAME)
+            .fuzziness(Fuzziness.AUTO);
+        qb.must(fuzzyQuery);// 相当于and
+
+        // 环境区分（集团、铁军）  亚太暂时没有这个搜索条件
+        if (StringUtils.isBlank(searchQuery.getEnv()) || !"YT".equals(searchQuery.getEnv())) {
+            qb.must(QueryBuilders.wildcardQuery("supportService", "*" + device + "*"));
+        }
+
+        // 个人受众为精准查询条件
+        if(!CollectionUtils.isEmpty(searchQuery.getCodeList())){
+            String[] stringArray = searchQuery.getCodeList().toArray(new String[0]);
+            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(MUST_FIELD_NAME, stringArray);
+            qb.must(termsQueryBuilder);
+        }
+
+        // company为精准查询条件
+        if(StringUtils.isNotBlank(searchQuery.getCompany())){
+            TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery("company.keyword", searchQuery.getCompany());
+            qb.must(termsQueryBuilder);
+        }
+
+
+        searchSourceBuilder.query(qb);
+        searchSourceBuilder.from(searchQuery.getPageNo() * searchQuery.getPageSize());
+        searchSourceBuilder.size(searchQuery.getPageSize());
+//        qb.mustNot()  // 相当于 and !=
+//        qb.should())  // 相当于 or
+
+        //排序  需要在索引创建时或在索引数据之前，为排序的字段添加映射。在映射中，确保指定了要排序字段的类型
+//        searchSourceBuilder.sort("publishTime", SortOrder.DESC);
+
+        String searchStr = searchSourceBuilder.toString();
+        Search search = new Search.Builder(searchStr).build();
+
+        try {
+            JestResult result = jestClient.execute(search);
+            List<LtCourseInfoDTO> list = result.getSourceAsObjectList(LtCourseInfoDTO.class);
+            infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+            infoModel.setMsg("操作成功");
+            infoModel.setData(list);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            infoModel.setMsg(e.getMessage());
+            e.printStackTrace();
+        }
+        return infoModel;
+    }
+
+    /**
+     * 关键字高亮显示
+     * @param queryForm 查询实体类
+     * @return
+     * @throws IOException
+     */
+    public PubRespInfoModel search(QueryForm queryForm) throws IOException {
+        PubRespInfoModel infoModel = new PubRespInfoModel();
+        infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
         long startTime = System.currentTimeMillis();
-        ssSyncTJJingGuanService.syncLtStudentInfo();
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - startTime;
-
-        logger.info("全员同步铁军经管学员数据花费时间：{}",duration);
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-    }
-
-    /**
-     * 增量学员更新 (两网)
-     * @return
-     */
-    @GetMapping("/insertOrUpdateStudentInfo")
-    @XxlJob("insertOrUpdateStudentInfo")
-    public NError insertOrUpdateStudentInfo() {
-        long startTime1 = System.currentTimeMillis();
-        this.insertOrUpdateStudentInfo("create",null,null);
-
-        long endTime1 = System.currentTimeMillis();
-        long duration1 = endTime1 - startTime1;
-
-        logger.info("增量同步铁军学员数据（create）花费时间：{}",duration1);
-
-        long startTime = System.currentTimeMillis();
-        this.insertOrUpdateStudentInfo("update",null,null);
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - startTime;
-        logger.info("增量同步铁军学员数据（update）花费时间：{}",duration);
-
-        //异常表校验
-        ssSyncTJJingGuanService.checkException();
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-    }
-
-    @GetMapping("/exception")
-    public NError exception(){
-        //异常表校验
-        ssSyncTJJingGuanService.checkException();
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-    }
-
-    /**
-     * 手动更新学员
-     * @return
-     */
-    @GetMapping("/handInsertOrUpdateStudentInfo")
-    @XxlJob("handInsertOrUpdateStudentInfo")
-    public NError handInsertOrUpdateStudentInfo() {
-        String dateString = XxlJobHelper.getJobParam();
-        // 指定的日期格式的正则表达式
-        String pattern = "\\d{4}-\\d{1,2}-\\d{1,2}\\|\\d{4}-\\d{1,2}-\\d{1,2}";
-
-        // 创建 Pattern 对象
-        Pattern r = Pattern.compile(pattern);
-
-        // 创建 Matcher 对象
-        Matcher m = r.matcher(dateString);
-        if(ObjectUtil.isNotNull(dateString) || m.matches()){
-            logger.info(">>>>>>>>>>>>>接收格式正确：{}<<<<<<<<<<<<<",dateString);
-            this.handInsertOrUpdateStudentInfo(dateString);
-            return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-
-        }else{
-            logger.info("=============接收格式错误：{}==============",dateString);
-            return new NError(ConstantField.ERROR_CODE, NError.NO_RESULT);
-
+        final String[] indexName = queryForm.getIndexNames();
+        final List<SearchDTO> orSearchList = queryForm.getOrSearchList();
+        final List<SearchDTO> sortFieldList = queryForm.getSortFieldList();
+        final List<String> highlightFieldList = queryForm.getHighlightFieldList();
+        final List<SearchDTO> queryStringList = queryForm.getQueryStringList();
+        final Integer pageNum = queryForm.getPageNum();
+        final Integer pageSize = queryForm.getPageSize();
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        //用于搜索文档，聚合，定制查询有关操作
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.indices(indexName);
+        //or查询
+        BoolQueryBuilder orQuery = QueryBuilders.boolQuery();
+        for (SearchDTO dto : orSearchList) {
+            orQuery.should(QueryBuilders.termQuery(dto.getField(),dto.getValue()));
         }
-    }
+        boolQueryBuilder.must(orQuery);
 
-    /**
-     * 手动更新某日、哪些学员信息
-     * @return
-     */
-    @GetMapping("/handInsertOrUpdateStudentInfoByDateAndUserIds")
-    @XxlJob("handInsertOrUpdateStudentInfoByDateAndUserIds")
-    public NError handInsertOrUpdateStudentInfoByDateAndUserIds() {
-        String strString = XxlJobHelper.getJobParam();
-        //String strString = "{2024-08-29|2024-08-29,(BYD-HeDaQiang;BYD-HuangYu27)}";
-        // 指定的日期格式的正则表达式
-        String pattern = "\\{(\\d{4}-\\d{2}-\\d{2}(\\|\\d{4}-\\d{2}-\\d{2})*);(\\(([^,()]+)(;[^,()]+)*\\))\\}";        // 创建 Pattern 对象
-        Pattern r = Pattern.compile(pattern);
+        //分词查询
+        BoolQueryBuilder analysisQuery = QueryBuilders.boolQuery();
+        for (SearchDTO dto : queryStringList) {
+            final String field = dto.getField();
+            //清除左右空格
+            String keyword = dto.getValue().trim();
+            //处理特殊字符
+            keyword = QueryParser.escape(keyword);
+            analysisQuery.should(QueryBuilders.queryStringQuery(keyword).field(field).field(field.concat(PINYIN_SUFFIX)));
+        }
+        boolQueryBuilder.must(analysisQuery);
 
-        // 创建 Matcher 对象
-        Matcher m = r.matcher(strString);
-        if(ObjectUtil.isNotNull(strString) || m.matches()){
-            logger.info(">>>>>>>a>>>>>>接收格式正确：{}<<<<<<<<<<<<<",strString);
-            String regex = "\\{([^}]*)\\}";
-            Pattern patternstr = Pattern.compile(regex);
-            Matcher matcher = patternstr.matcher(strString);
-            if (matcher.find()) {
-                String innerContent = matcher.group(1); // 提取大括号内的内容
-                System.out.println("大括号内的内容: " + innerContent);
-                List<String> strlist = Arrays.asList(innerContent.split(","));
-                String dateString = strlist.get(0);
-                String outputStr = strlist.get(1).replace("(", "").replace(")", "");
-                this.handInsertOrUpdateByDateAndUserIds(dateString,outputStr);
-                return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
+        //高亮显示数据
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        //设置关键字显示颜色
+        highlightBuilder.preTags(HIGHLIGHT_PRE_TAGS);
+        highlightBuilder.postTags(HIGHLIGHT_POST_TAGS);
+        //设置显示的关键字
+        for (String field : highlightFieldList) {
+            highlightBuilder.field(field, 0, 0).field(field.concat(PINYIN_SUFFIX), 0, 0);
+        }
+        highlightBuilder.requireFieldMatch(false);
+        //分页
+        int start = 0;
+        int end = 10000;
+        if (queryForm.isNeedPage()) {
+            start = (pageNum - 1) * pageSize;
+            end = pageSize;
+        }
+        //设置高亮
+        searchSourceBuilder.highlighter(highlightBuilder);
+        searchSourceBuilder.from(start);
+        searchSourceBuilder.size(end);
+        //追踪分数开启
+        searchSourceBuilder.trackScores(true);
+        //注解
+        searchSourceBuilder.explain(true);
+        //排序
+        for (SearchDTO dto : sortFieldList) {
+            SortOrder sortOrder;
+            final String desc = "desc";
+            final String value = dto.getValue();
+            final String field = dto.getField();
+            if (desc.equalsIgnoreCase(value)) {
+                sortOrder = SortOrder.DESC;
             } else {
-                logger.info("没有找到大括号内的内容");
-                return new NError(ConstantField.ERROR_CODE, NError.NO_RESULT);
+                sortOrder = SortOrder.ASC;
             }
-
-
-        }else{
-            logger.info("=============接收格式错误：{}==============",strString);
-            return new NError(ConstantField.ERROR_CODE, NError.NO_RESULT);
-
+            searchSourceBuilder.sort(field,sortOrder);
         }
-    }
+        searchSourceBuilder.query(boolQueryBuilder);
+        searchRequest.source(searchSourceBuilder);
+        SearchHits hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).getHits();
+        List<Map<String,Object>> data = new ArrayList<>();
+        for (SearchHit hit : hits){
+            Map<String,Object> sourceData = hit.getSourceAsMap();
+            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            for (String key : highlightFields.keySet()){
+                sourceData.put(key,highlightFields.get(key).getFragments()[0].string());
+            }
+            data.add(sourceData);
+        }
+        long endTime = System.currentTimeMillis();
 
-    private void handInsertOrUpdateByDateAndUserIds(String dateString, String outputStr) {
-        insertOrUpdateStudentInfo("create",dateString,outputStr);
-        insertOrUpdateStudentInfo("update",dateString,outputStr);
-    }
-
-    public void handInsertOrUpdateStudentInfo(String dateString) {
-        insertOrUpdateStudentInfo("create",dateString,null);
-        insertOrUpdateStudentInfo("update",dateString,null);
-
+        SearchVO vo = new SearchVO();
+        final String searchData = queryStringList.stream().map(i -> i.getValue()).collect(Collectors.joining(","));
+        final List<String> searchFieldList = queryStringList.stream().map(i -> i.getField()).collect(Collectors.toList());
+        vo.setRecords(handlerData(data,searchFieldList));
+        vo.setTotal(hits.getTotalHits());
+        vo.setPageNum(queryForm.getPageNum());
+        vo.setPageSize(queryForm.getPageSize());
+        infoModel.setMsg("搜索 <span class='highlight'>" + searchData + "</span> 找到 " + vo.getTotal() + " 个与之相关的内容，耗时：" + (endTime - startTime) +"ms");
+        //处理数据
+        infoModel.setData(vo);
+        infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+        return infoModel;
     }
 
     /**
-     * 增量处理新增、删除、更新人员信息
-     * @param type
+     * 处理高亮后的数据
+     * @param data ES查询结果集
      */
-    public void insertOrUpdateStudentInfo(String type,String dateString,String userids) {
-        String key = "TJ_JINGGUAN_";
-        String accessToken = null;
-        String time = null;
-        if(redisUtil.hHasKey(key,"accessToken")){
-            accessToken = (String) redisUtil.hget(key,"accessToken");
+    private List<Map<String,Object>> handlerData(List<Map<String,Object>> data,List<String> fieldList) {
+        log.info("查询结果：{}",data);
+        if (CollectionUtils.isEmpty(data)) {
+            return Lists.newArrayList();
         }
-        if(ObjectUtil.isNull(dateString)){
-            logger.info("自动跑批");
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.DAY_OF_MONTH,-2);
-            String yesDay = sdf.format(cal.getTime());
-            cal = Calendar.getInstance();
-            cal.add(Calendar.DATE, 1);// 会有时区问题 当前时间+1天
-            String today = sdf.format(cal.getTime());
-            time = yesDay + "|" +today;
-            logger.info("自动跑批,时间：{};类型：{}",time,type);
-
-        }else{
-            time = dateString;
-            logger.info("手动跑批,时间：{};类型：{}",time,type);
-
+        if (CollectionUtils.isEmpty(fieldList)) {
+            return data;
         }
-        try{
-            //同一批数据的批次号
-            String batchNumber = type + "_" + UUID.randomUUID().toString().replaceAll("-", "");
-            logger.info("增量铁军同步处理批次号为：{}",batchNumber);
-            Integer currentPage = 1;
-            logger.info("==============开始获取第{}页数据=============", currentPage);
-            JSONObject dataJson = ssSyncTJJingGuanService.getInsertOrUpdateStudent(currentPage,accessToken,time,type,userids, batchNumber);
-            if(!ObjectUtil.isNull(dataJson)
-                && "200".equals(dataJson.getString("code"))) {
-                Integer countPage = (Integer) dataJson.get("countPage");
-                logger.info("==============countPage=============: {}", countPage);
-                for (int i = 2; i <= countPage; i++) {
-                    logger.info("==============开始获取第{}页/{}页数据=============", i, countPage);
-                    ssSyncTJJingGuanService.getInsertOrUpdateStudent(i, accessToken, time, type, userids, batchNumber);
-                    logger.info("==============结束获取第{}页/{}页数据=============", i, countPage);
+        for (Map<String, Object> map : data) {
+            for (String field : fieldList) {
+                if (map.containsKey(field.concat(PINYIN_SUFFIX))) {
+                    String result1 = map.get(field).toString();
+                    String result2 = map.get(field.concat(PINYIN_SUFFIX)).toString();
+                    //将同义词合并
+                    for (;;) {
+                        int start = result1.indexOf(HIGHLIGHT_PRE_TAGS);
+                        int end = result1.indexOf(HIGHLIGHT_POST_TAGS);
+                        if (start == -1 || end == -1) {
+                            break;
+                        }
+                        String replaceKeyword = result1.substring(start, end).replace(HIGHLIGHT_PRE_TAGS, "");
+                        result2 = result2.replaceAll(replaceKeyword, HIGHLIGHT_PRE_TAGS + replaceKeyword + HIGHLIGHT_POST_TAGS);
+                        result1 = result1.substring(end + 1);
+                    }
+                    map.put(field, result2);
+                    map.remove(field.concat(PINYIN_SUFFIX));
                 }
             }
-
-            //统一更新ltStudentInfo
-            ssSyncTJJingGuanService.saveStudentInfo(type,batchNumber);
-        }catch (Exception e){
-            e.printStackTrace();
-            logger.info("铁军经管学员增量接口同步异常:{}",e.getMessage());
         }
+        return data;
     }
-
-    /**
-     * 手动输入日期，将中间表数据同步到学院表
-     * @return
-     */
-    @GetMapping("/handInsertOrUpdateStudentInfoByDate")
-    @XxlJob("handInsertOrUpdateStudentInfoByDate")
-    public NError handInsertOrUpdateStudentInfoByDate() {
-        String dateString = XxlJobHelper.getJobParam();
-        // 指定的日期格式的正则表达式
-        String pattern = "\\d{4}-\\d{1,2}-\\d{1,2}\\,\\d{4}-\\d{1,2}-\\d{1,2}";
-
-        // 创建 Pattern 对象
-        Pattern r = Pattern.compile(pattern);
-
-        // 创建 Matcher 对象
-        Matcher m = r.matcher(dateString);
-        if(ObjectUtil.isNotNull(dateString) ||m.matches()){
-            logger.info(">>>>>>>>>>>>>接收格式正确：{}<<<<<<<<<<<<<",dateString);
-            ssSyncTJJingGuanService.handInsertOrUpdateStudentInfoByDate(dateString);
-            return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-
-        }else{
-            logger.info("=============接收格式错误：{}==============",dateString);
-            return new NError(ConstantField.ERROR_CODE, NError.NO_RESULT);
-
-        }
-    }
-
-    /**
-     * 全量同步岗位信息
-     * @param paramMap
-     * @return
-     */
-    @GetMapping("/syncJingGuanJobPosition")
-    @XxlJob("syncJingGuanJobPosition")
-    public NError syncJingGuanJobPosition(Map<String, String> paramMap) {
-        Integer currentPage = 1;
-        JSONObject fDataJson = ssSyncTJJingGuanService.getJSONArrayJobPosition();
-        JSONArray fData = (JSONArray) fDataJson.get("data");
-        ssSyncTJJingGuanService.syncJingGuanJobPosition(fData);
-
-        logger.info("数据落地完毕");
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-    }
-
-    /**
-     * 全量学员信息同步岗位编码
-     * @param paramMap
-     * @return
-     */
-    @GetMapping("/syncJingGuanJobPositionCode")
-    @XxlJob("syncJingGuanJobPositionCode")
-    public NError syncJingGuanJobPositionCode(Map<String, String> paramMap) {
-        logger.info(">>>>>>>>>>>>>全铁军经管学员岗位编码同步开始<<<<<<<<<<<<<<");
-        List<LtBusinessCodeSelect> ltBusinessCodeSelects = ltBusinessCodeSelectRepository.findAllByCodeType("jobposition");
-        Map<String,LtBusinessCodeSelect> positionMap = ltBusinessCodeSelects.stream().collect(Collectors.toMap(LtBusinessCodeSelect::getCodeName,Function.identity(),(d1,d2)->d1));
-        // 当前页码，从0开始
-        int currentPage = 0;
-        // 每页的大小
-        int pageSize = 10000;
-
-        Pageable pageable = PageRequest.of(currentPage, pageSize, Sort.by("id"));
-        Page<LtStudentInfo> page = ltStudentInfoRepository.findAllByStuFlag("3",pageable);
-
-        List<LtStudentInfo> ltStudentInfos = page.getContent();
-        logger.info("ltStudentInfos:{}",ltStudentInfos.size());
-        ssSyncTJJingGuanService.syncJingGuanJobPositionCode(ltStudentInfos,positionMap);
-
-        int totalPages = page.getTotalPages();
-        for (int i = 0; i < totalPages; i++) {
-
-            // 还有更多的页面需要处理
-            currentPage++;
-            pageable = PageRequest.of(currentPage, pageSize, Sort.by("id"));
-            Page<LtStudentInfo> pageNext = ltStudentInfoRepository.findAllByStuFlag("3",pageable);
-            List<LtStudentInfo> ltStudentInfoNext = pageNext.getContent();
-            logger.info(">>>>>>>>>>>>>>>>>处理全量学员信息同步岗位编码当前进度：{}/{}",i,totalPages);
-            logger.info("ltStudentInfoNext:{}",ltStudentInfoNext.size());
-            ssSyncTJJingGuanService.syncJingGuanJobPositionCode(ltStudentInfoNext,positionMap);
-        }
-
-        logger.info(">>>>>>>>>>>>>全铁军经管学员岗位编码同步结束<<<<<<<<<<<<<<");
-        return new NError(ConstantField.SUCCESS_CODE, NError.SUCCESS);
-    }
-
-    /**
-     * 全量学员信息同步机构信息
-     * @param paramMap
-     * @return
-     */
-    @GetMapping("/syncJingGuanDepartment")
-    @XxlJob("syncJingGuanDepartment")
-    public NError syncJingGuanDepartment(Map<String, String> paramMap) {
-        logger.info(">>>>>>>>>>>>>全铁军经管学员机构信息同步开始<<<<<<<<<<<<<<");
-        NError nerror = ssSyncTJJingGuanService.syncJingGuanDepartment();
-        logger.info(">>>>>>>>>>>>>全铁军经管学员岗位编码同步结束<<<<<<<<<<<<<<");
-        return nerror;
-    }
-
-
-    /**
-     * 全量同步学员信息 (到新中间表 sync_tj_student_all)
-     * @param paramMap
-     * @return
-     */
-    @GetMapping("/syncJingGuanAllStudentAll")
-    @XxlJob("syncJingGuanAllStudentAll")
-    public NError syncJingGuanAllStudentAll(Map<String, String> paramMap) {
-        String dateString = XxlJobHelper.getJobParam();
-        int page = 1;
-        if(StringUtils.isNotBlank(dateString)){
-            page = Integer.parseInt(dateString);
-        }
-
-        return ssSyncTJJingGuanService.syncStudentAll(page);
-    }
-
 }
+
+
+package com.sinosoft.domain.es;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+/**
+ * @author zl
+ * @date 2024/03/26
+ */
+@ApiModel(description = "es搜索数据集合")
+public class SearchFormData {
+
+    @ApiModelProperty(value = "课程编码，班级编码，咨询编码，讲师编码")
+    private String code;
+
+    @ApiModelProperty(value = "课程名称，班级名称，咨询名称，讲师名称")
+    private String name;
+
+    @ApiModelProperty(value = "课程简介，班级简介，咨询简介，讲师简介")
+    private String desc;
+
+    @ApiModelProperty(value = "类型(course,courseProgram,,teacher)")
+    private String type;
+
+    @ApiModelProperty(value = "集合")
+    private String content;
+
+    @ApiModelProperty(value = "创建时间")
+    private String createTime;
+
+    @ApiModelProperty(value = "修改时间")
+    private String updateTime;
+
+    @ApiModelProperty(value = "国家")
+    private String company;
+
+    @ApiModelProperty(value = "分公司")
+    private String branchType;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(String createTime) {
+        this.createTime = createTime;
+    }
+
+    public String getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(String updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public String getBranchType() {
+        return branchType;
+    }
+
+    public void setBranchType(String branchType) {
+        this.branchType = branchType;
+    }
+}
+
+
