@@ -1540,7 +1540,6 @@ CASE
 	lcp.created_by_staff_code AS "创建人工号",
 	lcp.created_by_name AS "创建人",
 CASE
-		
 		WHEN 'YT' = 'JT' THEN
 		CONCAT_WS ( '-', lcps.program_code, lcps.schedule_code ) ELSE CONCAT_WS ( '', lcps.ID ) 
 	END AS "唯一编码",
@@ -1550,7 +1549,6 @@ CASE
 	lci.course_code AS "课程编码",
 	lci.is_company_registered,
 CASE
-		
 		WHEN lci.is_company_registered = 'Y' THEN
 		'是' 
 		WHEN lci.is_company_registered = 'N' THEN
@@ -1558,7 +1556,6 @@ CASE
 	END AS "是否公司备案课程",
 	lcps.schedule_content AS "日程内容",
 CASE
-		
 		WHEN lcps.schedule_type = 'offline-course' THEN
 		'面授课程' 
 		WHEN lcps.schedule_type = 'online-course' THEN
@@ -1986,4 +1983,10 @@ and
 'M4-01-000063',
 'M2-01-000011',
 'P4-05-000063'
-)
+)；
+
+-----视频切片----
+select * from file_info where id in (select file_id from lt_course_chapter where course_code = '003-03-000003' and deleted = false and status = '1')
+-- 4478
+-- tms/202408/VhAt8UKW6lDd2K922gGZeqRvnF8AdF.mp4
+select * from lt_m3u8   where code = 'VhAt8UKW6lDd2K922gGZeqRvnF8AdF'
