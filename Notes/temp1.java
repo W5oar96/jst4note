@@ -429,3 +429,49 @@ public class CourseInfoEntity implements Serializable{
     }
 
 }
+
+
+
+
+public PubRespInfoModel bulkSaveEntities(List<?> entities, String type) {
+    PubRespInfoModel infoModel = new PubRespInfoModel();
+    infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
+
+    if (CollectionUtils.isEmpty(entities)) {
+        infoModel.setMsg("实体列表为空");
+        return infoModel;
+    }
+
+    String indexName = getIndexNameByType(type);
+    if (indexName == null) {
+        infoModel.setMsg("未知的类型：" + type);
+        return infoModel;
+    }
+
+    Bulk.Builder bulkBuilder = new Bulk.Builder();
+    for (Object entity : entities) {
+        bulkBuilder.addAction(new Index.Builder(convertToCommonEntity(entity, type))
+                .index(indexName)
+                .build());
+    }
+
+    try {
+        BulkResult bulkResult = jestClient.execute(bulkBuilder.build());
+        if (bulkResult.isSucceeded()) {
+            infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+            infoModel.setMsg("批量操作成功");
+        } else {
+            infoModel.setMsg("批量操作失败：" + bulkResult.getErrorMessage());
+            log.error("批量操作失败：{}", bulkResult.getErrorMessage());
+            for (BulkResult.BulkResultItem item : bulkResult.getItems()) {
+                if (item.isFailed()) {
+                    log.error("单个操作失败：{}", item.error);
+                }
+            }
+        }
+    } catch (IOException e) {
+        infoModel.setMsg(e.getMessage());
+        log.error(e.getMessage());
+    }
+    return infoModel;
+}
