@@ -4,9 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.sinosoft.domain.FileInfo;
 import com.sinosoft.domain.LtCourseInfo;
-import com.sinosoft.domain.es.CourseInfoEntity;
-import com.sinosoft.domain.es.SearchFormData;
-import com.sinosoft.domain.es.SearchQuery;
+import com.sinosoft.domain.es.*;
 import com.sinosoft.repository.LtCourseInfoRepository;
 import com.sinosoft.service.dto.LtCourseInfoDTO;
 import com.sinosoft.service.vo.es.QueryForm;
@@ -45,6 +43,7 @@ import org.springframework.util.CollectionUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -71,6 +70,12 @@ public class ElasticsearchService {
     private static final String[] FUZZY_FIELD_NAME = {"courseName","courseKeys"};//模糊匹配字段
 
     private static final String MUST_FIELD_NAME = "courseCode.keyword";//精准匹配字段
+
+    private static final String COURSE_INDEX = "course";
+    private static final String EXAM_INDEX = "exam";
+    private static final String PROGRAM_INDEX = "program";
+    private static final String NOTICE_INDEX = "notice";
+    private static final String TYPE_FIELD = "type";
 
     @Autowired
     private JestClient jestClient;
@@ -122,30 +127,108 @@ public class ElasticsearchService {
     }
 
     /**
-     * 批量保存内容到ES
+     * 实体Entity转换
+     */
+    private Map<String, Object> convertToCommonEntity(Object entity, String type) {
+        Map<String, Object> commonEntity = new HashMap<>();
+        commonEntity.put("type", type);
+
+        if (entity instanceof CourseEntity) {
+            LtCourseInfo courseInfo = (LtCourseInfo) entity;
+            commonEntity.put("code",courseInfo.getCourseCode());
+            commonEntity.put("name",courseInfo.getCourseName());
+        } else if (entity instanceof ExamEntity) {
+            ExamEntity examinfo = (ExamEntity) entity;
+            commonEntity.put("code",examinfo.getExamCode());
+            commonEntity.put("name",examinfo.getExamName());
+        } else if (entity instanceof CourseProgramEntity) {
+            CourseProgramEntity courseProgram = (CourseProgramEntity) entity;
+            commonEntity.put("code",courseProgram.getProgramCode());
+            commonEntity.put("name",courseProgram.getProgramCode());
+        }
+        return commonEntity;
+    }
+
+    private String getIndexNameByType(String type) {
+        switch (type) {
+            case "course": return COURSE_INDEX;
+            case "exam" : return EXAM_INDEX;
+            case "program" : return PROGRAM_INDEX;
+            case "notice" : return NOTICE_INDEX;
+            default: return null;
+        }
+    }
+
+    /**
+     * 保存单个实体
      */
 
-    public PubRespInfoModel saveEntity(long id, String name) {
+    public PubRespInfoModel saveEntity(Object entity, String type) {
         PubRespInfoModel infoModel = new PubRespInfoModel();
         infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
 
-        CourseInfoEntity newEntity = new CourseInfoEntity(id,name);
-        List<CourseInfoEntity> entityList = new ArrayList<>();
-        entityList.add(newEntity);
+        String indexName = getIndexNameByType(type);
+        if (indexName == null) {
+            infoModel.setMsg("未知的类型:" + type);
+            return infoModel;
+        }
+        Index index = new Index.Builder(convertToCommonEntity(entity, type)).index(indexName).build();
 
-        Bulk.Builder bulk = new Bulk.Builder();
-        for(CourseInfoEntity entity : entityList) {
-            Index index = new Index.Builder(entity).index(CourseInfoEntity.INDEX_NAME).type(CourseInfoEntity.TYPE).build();
-            bulk.addAction(index);
+        try {
+            JestResult execute = jestClient.execute(index);
+            if (execute.isSucceeded()) {
+                log.info("ES 插入完成");
+                infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+                infoModel.setMsg("操作成功");
+            } else {
+                log.error("es 插入失败");
+                infoModel.setMsg("操作失败" + execute.getErrorMessage());
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            infoModel.setMsg(e.getMessage());
+            log.error(e.getMessage());
+        }
+        return infoModel;
+    }
+
+    /**
+     *批量保存实体
+     */
+
+    public PubRespInfoModel bulkSaveEntities(List<?> entities, String type) {
+        PubRespInfoModel infoModel = new PubRespInfoModel();
+        infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
+
+        if (CollectionUtils.isEmpty(entities)) {
+            infoModel.setMsg("实体列表为空");
+            return infoModel;
+        }
+
+        String indexName = getIndexNameByType(type);
+        if (indexName == null) {
+            infoModel.setMsg("未知的类型：" + type);
+            return infoModel;
+        }
+
+        Bulk.Builder bulkBuilder = new Bulk.Builder();
+        for (Object entity : entities) {
+            bulkBuilder.addAction(new Index.Builder(convertToCommonEntity(entity, type))
+                .index(indexName)
+                .build());
         }
 
         try {
-            BulkResult execute = jestClient.execute(bulk.build());
-            log.info("ES 插入完成");
-            infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
-            infoModel.setMsg("操作成功");
+            BulkResult bulkResult = jestClient.execute(bulkBuilder.build());
+            if (bulkResult.isSucceeded()) {
+                infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+                infoModel.setMsg("批量操作成功");
+            } else {
+                infoModel.setMsg("批量操作失败：" + bulkResult.getErrorMessage());
+                log.error("批量操作失败：{}", bulkResult.getErrorMessage());
+            }
         } catch (IOException e) {
-            e.printStackTrace();
             infoModel.setMsg(e.getMessage());
             log.error(e.getMessage());
         }
@@ -237,6 +320,84 @@ public class ElasticsearchService {
             e.printStackTrace();
         }
         return infoModel;
+    }
+
+    public PubRespInfoModel searchNew(QueryForm queryForm, List<String> types) throws IOException {
+        PubRespInfoModel infoModel = new PubRespInfoModel();
+        infoModel.setFlg(PubRespInfoModel.FLG_ERROR);
+
+        String[] indexNames = getIndexNamesByTypes(types);
+        if (indexNames == null || indexNames.length == 0) {
+            indexNames = new String[]{COURSE_INDEX, EXAM_INDEX, PROGRAM_INDEX, NOTICE_INDEX};
+        }
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+        // 构建查询条件 (使用 queryStringQuery，支持多字段匹配和特殊字符处理)
+        for (SearchDTO dto : queryForm.getQueryStringList()) {
+            final String field = dto.getField();
+            String keyword = dto.getValue().trim();
+            keyword = org.apache.lucene.queryparser.classic.QueryParser.escape(keyword);
+            boolQueryBuilder.should(QueryBuilders.queryStringQuery(keyword).field(field).field(field.concat(PINYIN_SUFFIX)));
+        }
+
+        searchSourceBuilder.query(boolQueryBuilder);
+
+        // 高亮设置
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.preTags(HIGHLIGHT_PRE_TAGS);
+        highlightBuilder.postTags(HIGHLIGHT_POST_TAGS);
+        for (String field : queryForm.getHighlightFieldList()) {
+            highlightBuilder.field(field, 0, 0).field(field.concat(PINYIN_SUFFIX), 0, 0);
+        }
+        highlightBuilder.requireFieldMatch(false); // 设置为 false，允许在多个字段中匹配高亮
+        searchSourceBuilder.highlighter(highlightBuilder);
+
+        // 分页
+        searchSourceBuilder.from((queryForm.getPageNum() - 1) * queryForm.getPageSize());
+        searchSourceBuilder.size(queryForm.getPageSize());
+
+        SearchRequest searchRequest = new SearchRequest(indexNames);
+        searchRequest.source(searchSourceBuilder);
+
+        try {
+            JestResult result = jestClient.execute(new Search.Builder(searchSourceBuilder.toString()).build());
+            if (result != null && result.isSucceeded()) { // 空值和成功检查
+                List<Map<String, Object>> data = new ArrayList<>();
+                List<Map<String, Object>> sourceList = result.getSourceAsObjectList(Map.class);
+                if(sourceList != null){
+                    data.addAll(sourceList);
+                }
+                //高亮处理
+                data = handlerData(data, queryForm.getHighlightFieldList(),result);
+                SearchVO vo = new SearchVO();
+                final String searchData = queryForm.getQueryStringList().stream().map(i -> i.getValue()).collect(Collectors.joining(","));
+                vo.setRecords(data);
+                vo.setTotal(Long.valueOf(result.getTotal()));
+                vo.setPageNum(queryForm.getPageNum());
+                vo.setPageSize(queryForm.getPageSize());
+                infoModel.setMsg("搜索 <span class='highlight'>" + searchData + "</span> 找到 " + vo.getTotal() + " 个与之相关的内容");
+                infoModel.setData(vo);
+                infoModel.setFlg(PubRespInfoModel.FLG_SUCCESS);
+            } else if (result != null){
+                infoModel.setMsg(result.getErrorMessage());
+            }else{
+                infoModel.setMsg("查询失败");
+            }
+
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            infoModel.setMsg(e.getMessage());
+            e.printStackTrace();
+        }
+        return infoModel;
+    }
+    private String[] getIndexNamesByTypes(List<String> types) {
+        if (CollectionUtils.isEmpty(types)) {
+            return null;
+        }
+        return types.stream().map(this::getIndexNameByType).filter(Objects::nonNull).toArray(String[]::new);
     }
 
     /**
@@ -382,118 +543,3 @@ public class ElasticsearchService {
         return data;
     }
 }
-
-
-package com.sinosoft.domain.es;
-
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
-/**
- * @author zl
- * @date 2024/03/26
- */
-@ApiModel(description = "es搜索数据集合")
-public class SearchFormData {
-
-    @ApiModelProperty(value = "课程编码，班级编码，咨询编码，讲师编码")
-    private String code;
-
-    @ApiModelProperty(value = "课程名称，班级名称，咨询名称，讲师名称")
-    private String name;
-
-    @ApiModelProperty(value = "课程简介，班级简介，咨询简介，讲师简介")
-    private String desc;
-
-    @ApiModelProperty(value = "类型(course,courseProgram,,teacher)")
-    private String type;
-
-    @ApiModelProperty(value = "集合")
-    private String content;
-
-    @ApiModelProperty(value = "创建时间")
-    private String createTime;
-
-    @ApiModelProperty(value = "修改时间")
-    private String updateTime;
-
-    @ApiModelProperty(value = "国家")
-    private String company;
-
-    @ApiModelProperty(value = "分公司")
-    private String branchType;
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
-
-    public String getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(String updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
-    public String getBranchType() {
-        return branchType;
-    }
-
-    public void setBranchType(String branchType) {
-        this.branchType = branchType;
-    }
-}
-
-
