@@ -1016,36 +1016,6 @@ select url from file_info where id = '370182709';
 
 
 
-课程编码--------------G3-0124030001
-课程名称----------【明日之翼】线上 守卫红线 廉洁篇
-8767条
-select * from counter_trance_log where course_code = 'G3-0124030001' and chapter_code = 'F97T42O6G2B';
-
-
-
-课程编码--------------G3-0524030001
-课程名称----------【明日之翼】线上 守卫红线 品牌保护篇
-10096条
-select * from counter_trance_log where course_code = 'G3-0524030001' and chapter_code = 'F97T5050CNV' ;
-
-
-课程编码--------------G3-0324030001
-课程名称----------【明日之翼】线上 守卫红线 信息安全
-7884条
-select * from counter_trance_log where course_code = 'G3-0324030001' and chapter_code = 'F97T581Q9MG' ;
-
-
-课程编码--------------G3-0224030001
-课程名称----------【明日之翼】线上 守卫红线 品行篇
-1847条
-select * from counter_trance_log where course_code = 'G3-0224030001' and chapter_code = 'F97T5H1D5SF' ;
-
-课程编码--------------G3-0624030001
-课程名称----------【明日之翼】线上 守卫红线 知法篇
-8352条
-select * from counter_trance_log where course_code = 'G3-0624030001' and chapter_code = 'F97T5NJTAGP' ;
-
-
 SELECT * FROM ( SELECT jcr.created_date AS "createdDate", jcr.id AS "id", jcr.course_code AS 
 "courseCode", ( SELECT course_name FROM lt_course_info WHERE course_code = jcr.course_code 
 ) AS "courseName", lsi.NAME AS "name", lsi.manage_com AS "manageCom", lsi.manage_com_name AS 
@@ -2200,7 +2170,36 @@ update lt_student_info set trade_source = 'TJ' WHERE id in (
 select id from lt_student_info where staff_code is null and e_mail like '%@temp.com' and manage_com = 'A8603' and trade_source is not null and stu_flag = '3');
 
 
+--------面授总课时计算---------
+SELECT SUM( lcps.actual_course_hours ) AS 面授课程总实际课时
+FROM lt_attendance la
+JOIN lt_course_program_schedule lcps ON la.course_code = lcps.schedule_code
+JOIN lt_student_info lsi ON lsi.train_code = la.train_code
+WHERE
+    lcps.schedule_type = 'offline-course'
+    AND la.created_date < '2025-01-01'
+    AND lcps.deleted = 'f'
+    AND la.deleted = 'f'
+    AND lsi.agent_grade IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'O')
+    AND lsi.work_address IN (
+        SELECT code_value FROM sync_dict WHERE code_name NOT LIKE 'F%' AND code_type = 'BYD工作地点'
+    )
+    AND lsi.trade_source='HR';
 
-
-
--------修改密码----------
+--------线上总课时计算---------
+SELECT
+    SUM(ctl.duration_of_this_play) / 3600 AS "线上课程总学习时长(小时)"
+FROM
+    counter_trance_log ctl
+JOIN
+    lt_student_info lsi ON ctl.train_code = lsi.train_code
+WHERE
+    lsi.agent_grade IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'O')
+    AND lsi.trade_source = 'HR'
+    AND ctl.created_date < '2025-01-01'
+    AND lsi.work_address IN (
+        SELECT code_value 
+        FROM sync_dict 
+        WHERE code_name NOT LIKE 'F%' AND code_type = 'BYD工作地点'
+    )
+    AND ctl.deleted = FALSE;
