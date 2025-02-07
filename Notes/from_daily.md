@@ -11,3 +11,7 @@
 本地sql 初始密码
 ?tMCxsttn1q&
 已经修改密码为root
+
+localhost pgsql
+account root
+password root
