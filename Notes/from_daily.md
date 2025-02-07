@@ -7,3 +7,6 @@
 7. project 1,2,3
 
 雪花算法
+
+本地sql 初始密码
+qj,OMutBv8o1
