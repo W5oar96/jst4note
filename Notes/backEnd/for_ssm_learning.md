@@ -7,4 +7,4 @@ di，dependency injection，依赖注入，用于组件之间的依赖关系
 注册组件的方式3，使用@ComponentScan注解，组件批量扫描
 注册组件的方式4，使用@Import注解，导入第三方组件
 组件的作用域 @Scope，配合@Scope("singleton")，单例模式的时候才可以启用@Lazy 懒加载，仅在调用的时候才会注册
- 
+制造的某些对象比较复杂的时候，可以使用FactoryBean，工厂方法创建
