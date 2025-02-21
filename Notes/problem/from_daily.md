@@ -7,3 +7,5 @@
 [配制yml文件]application.yml 改redis
 
 [解决端口占用]解决端口占用https://www.runoob.com/w3cnote/windows-finds-port-usage.htmls
+
+[云桌面配置流程]settings -> maven切换成本地配置 compiler 增加vm location 设置 -Xmx4096m -Xms1024m -Djps.track.ap.dependencies=false -> edit configuration modify options 增加shorten command line , JAR 不生效采用classpath方式
