@@ -2072,3 +2072,56 @@ WHERE
 ORDER BY 
     a.begin_learn_time DESC
 LIMIT 10;
+
+用户线上学习记录报表count
+SELECT 
+    COUNT(1)
+FROM 
+    lt_join_course_report a
+LEFT JOIN 
+    lt_student_info b ON a.train_code = b.train_code
+LEFT JOIN 
+    lt_course_info c ON a.course_code = c.course_code
+LEFT JOIN 
+    lt_course_program_schedule lcps ON lcps.schedule_type = 'online - course' 
+    AND a.course_code = lcps.schedule_code 
+    AND lcps.deleted = false 
+    AND (NULL IS NOT NULL OR NULL IS NOT NULL)
+LEFT JOIN 
+    lt_course_program_enroll lcpe ON lcps.program_code = lcpe.program_code 
+    AND lcpe.train_code = a.train_code 
+    AND lcpe.deleted = false 
+    AND (NULL IS NOT NULL OR NULL IS NOT NULL)
+LEFT JOIN 
+    lt_course_program lcp ON lcps.program_code = lcp.program_code
+WHERE 
+    b.id IS NOT NULL
+    AND c.id IS NOT NULL
+    AND (b.branch_type LIKE '%B%')
+    AND (b.company = 'byd - group')
+    AND (NULL IS NULL OR a.train_code = CAST(NULL AS varchar))
+    AND (
+        ('contains' IS NULL OR 'contains' = 'contains') 
+        AND ('A86' IS NULL OR b.manage_com LIKE CONCAT('%', CAST('A86' AS varchar), '%')) 
+        OR ('contains' IS NULL OR 'contains' = 'equals') 
+        AND ('A86' IS NULL OR b.manage_com = CAST('A86' AS varchar))
+    )
+    AND (
+        (NULL IS NULL OR NULL = 'contains') 
+        AND (NULL IS NULL OR b.mul_Manage_com LIKE CONCAT('%', CAST(NULL AS varchar), '%')) 
+        OR (NULL IS NULL OR NULL = 'equals') 
+        AND (NULL IS NULL OR b.mul_Manage_com = CAST(NULL AS varchar))
+    )
+    AND (NULL IS NULL OR b.work_address LIKE CONCAT(CAST(NULL AS varchar), '%'))
+    AND (NULL IS NULL OR b.staff_code = CAST(NULL AS varchar))
+    AND (NULL IS NULL OR b.agent_state = CAST(NULL AS varchar))
+    AND (NULL IS NULL OR b.stu_flag = CAST(NULL AS varchar))
+    AND (NULL IS NULL OR (lcp.program_code = NULL AND lcps.id IS NOT NULL AND lcp.id IS NOT NULL AND lcpe.id IS NOT NULL))
+    AND (NULL IS NULL OR (lcp.program_name LIKE CONCAT('%', NULL, '%') AND lcps.id IS NOT NULL AND lcp.id IS NOT NULL AND lcpe.id IS NOT NULL))
+    AND (NULL IS NULL OR a.source_from = CAST(NULL AS varchar))
+    AND (NULL IS NULL OR c.course_code = CAST(NULL AS varchar))
+    AND (NULL IS NULL OR c.course_name LIKE CONCAT('%', CAST(NULL AS varchar), '%'))
+    AND (COALESCE(NULL, 'null') = 'null' OR a.begin_learn_time >= NULL)
+    AND (COALESCE(NULL, 'null') = 'null' OR a.begin_learn_time <= NULL)
+    AND (NULL IS NULL OR b.name LIKE CONCAT('%', CAST(NULL AS varchar), '%'))
+    AND (NULL IS NULL OR b.label_id LIKE CONCAT('%', CAST(NULL AS varchar), '%'));
