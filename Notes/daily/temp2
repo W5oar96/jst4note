@@ -1,5 +1,5 @@
 Request URL:
-https://e-lms.byd.com/scan/getScanUrl
+https://e-lms.byd.com/scan/getScanAuthState?deviceId=0881e45bc9a6482d8b2247d97eb73a1d
 Request Method:
 GET
 Status Code:
@@ -18,7 +18,7 @@ br
 content-type:
 application/json
 date:
-Mon, 03 Mar 2025 09:20:04 GMT
+Mon, 03 Mar 2025 09:20:16 GMT
 expires:
 0
 pragma:
@@ -70,10 +70,30 @@ x-timezone:
 Asia/Shanghai
 
 
-{flg: "success", msg: null, data: {state: "0", deviceId: "0881e45bc9a6482d8b2247d97eb73a1d",…}}
+deviceId: 0881e45bc9a6482d8b2247d97eb73a1d
+
+{flg: "success", msg: null,…}
 data
 : 
-{state: "0", deviceId: "0881e45bc9a6482d8b2247d97eb73a1d",…}
+{appid: "81c3759eda32441f83f87f5b49b2da91", state: "2", deviceId: "0881e45bc9a6482d8b2247d97eb73a1d",…}
+appid
+: 
+"81c3759eda32441f83f87f5b49b2da91"
+deviceId
+: 
+"0881e45bc9a6482d8b2247d97eb73a1d"
+state
+: 
+"2"
+token
+: 
+"312dbc1bb70a493a86c0618ac0842a13"
+url
+: 
+"https://e-lms.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=0881e45bc9a6482d8b2247d97eb73a1d&appid=81c3759eda32441f83f87f5b49b2da91"
+userId
+: 
+"6849618"
 flg
 : 
 "success"
@@ -81,13 +101,16 @@ msg
 : 
 null
 
-
 {
     "flg": "success",
     "msg": null,
     "data": {
-        "state": "0",
+        "appid": "81c3759eda32441f83f87f5b49b2da91",
+        "state": "2",
         "deviceId": "0881e45bc9a6482d8b2247d97eb73a1d",
-        "url": "https://e-lms.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=0881e45bc9a6482d8b2247d97eb73a1d&appid=81c3759eda32441f83f87f5b49b2da91"
+        "userId": "6849618",
+        "url": "https://e-lms.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=0881e45bc9a6482d8b2247d97eb73a1d&appid=81c3759eda32441f83f87f5b49b2da91",
+        "token": "312dbc1bb70a493a86c0618ac0842a13"
     }
 }
+    
