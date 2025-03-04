@@ -1,0 +1,145 @@
+Request URL:
+https://e-lms.byd.com/auth/login
+Request Method:
+POST
+Status Code:
+200 OK
+Remote Address:
+127.0.0.1:7890
+Referrer Policy:
+strict-origin-when-cross-origin
+access-control-allow-credentials:
+true
+access-control-allow-origin:
+https://e-lms.byd.com
+access-control-expose-headers:
+Authorization, Link, X-Total-Count
+cache-control:
+no-cache, no-store, max-age=0, must-revalidate
+connection:
+keep-alive
+content-encoding:
+br
+content-type:
+application/json
+date:
+Mon, 03 Mar 2025 09:20:16 GMT
+expires:
+0
+pragma:
+no-cache
+set-cookie:
+access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJmOWZjNmMzOGY0YjE0ZTAxYmMxMzE2ZTI3YzFhNTU5MyIsInNjb3BlIjpbIm9wZW5pZCJdLCJsdCI6MTc0MDk5MzU0Nywic2wiOmZhbHNlLCJleHAiOjE3NDA5OTM4NDcsImlhdCI6MTc0MDk5MzU0NywiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJYTTh6U2JueEhjbFBwdDdvamlDSXJDdlZWMW8iLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.kNH4QnL27o0DZwJ3f0-pmw_BU885nIDbqBZQidOdvWfMbR6uzJ5IEOT4aGDXGudUf2Yds0bS4Z8h1CeXL5_Io9vHx7DqBK1XgA9vO4fSuMro3phIlnNc09FCjREV-losP6FhIw9veJjFkcLMD2Pln2rBohKQKMwYF5sJEiOJD58ou14lgSqVjD4SusDeIevp-I5jkNKDOndxR_qd1ZotyDbvjL0KTHgEkmqYuIbjNEv9LJjddhj9y2ykVHu1dB9bDaha3Bi4S2UNJ0r_SnpVzvKZKlD2iWAHn993omt_n17Od9IKjNjpRBXNhQNFwLbEstU7518CsEmbRcsKCFRMsQ; path=/; HttpOnly
+set-cookie:
+refresh_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJmOWZjNmMzOGY0YjE0ZTAxYmMxMzE2ZTI3YzFhNTU5MyIsInNjb3BlIjpbIm9wZW5pZCJdLCJhdGkiOiJYTTh6U2JueEhjbFBwdDdvamlDSXJDdlZWMW8iLCJsdCI6MTc0MDk5MzU0Nywic2wiOmZhbHNlLCJleHAiOjE3NDE1OTgzNDcsImlhdCI6MTc0MDk5MzU0NywiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJvVk5CbWZERFljT0ZNUk45RkstR3VaRURSaDQiLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.nKxcVpvaNARWufDTD5yO0bNIukrjhkOO4xCGqme1P-iBu5SIyWOdWpMbpcP-DuI-UEJiSBvJ2QiExwJOwJp372E64umzd1vzqBpjA6q4r0ENTGHLmfrQJGmckiGARK_nM9fzidaUljDXZ1rBGIpcHK4Jbbtm5HrZdJX4KVm1QGJIElPHblEGdmesnE_X1eXoxnfK7W-XSdPQFLC9bYHViIMdPrA2_HsrnptiV9_ciKFCQ_dddtSjNyz0jw3dJ7_hnkJQhcz7rRMzKg-O3EgRLi4a7FpwMHCBSNaviP_a12XYG72cD5NVVT_m1ba77fYCtB5UEwopF5pv8bJgOaIkWA; path=/; HttpOnly; Max-Age=604797; Expires=Mon, 10-Mar-2025 09:19:04 GMT
+transfer-encoding:
+chunked
+vary:
+Origin
+vary:
+Access-Control-Request-Method
+vary:
+Access-Control-Request-Headers
+x-content-type-options:
+nosniff
+x-xss-protection:
+1; mode=block
+accept:
+*/*
+accept-encoding:
+gzip, deflate, br, zstd
+accept-language:
+zh-CN,zh;q=0.9
+connection:
+keep-alive
+content-length:
+125
+content-type:
+application/json
+host:
+e-lms.byd.com
+origin:
+https://e-lms.byd.com
+referer:
+https://e-lms.byd.com/pc/user/login?secret
+sec-ch-ua:
+"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"
+sec-ch-ua-mobile:
+?0
+sec-ch-ua-platform:
+"Windows"
+sec-fetch-dest:
+empty
+sec-fetch-mode:
+cors
+sec-fetch-site:
+same-origin
+user-agent:
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36
+x-branchtype:
+x-device:
+pc
+x-lang:
+zh-CN
+x-timezone:
+Asia/Shanghai
+
+
+{username: "6849618", code: "6849618", token: "312dbc1bb70a493a86c0618ac0842a13",…}
+appid
+: 
+"81c3759eda32441f83f87f5b49b2da91"
+code
+: 
+"6849618"
+token
+: 
+"312dbc1bb70a493a86c0618ac0842a13"
+username
+: 
+"6849618"
+
+
+
+{,…}
+access_token
+: 
+"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJmOWZjNmMzOGY0YjE0ZTAxYmMxMzE2ZTI3YzFhNTU5MyIsInNjb3BlIjpbIm9wZW5pZCJdLCJsdCI6MTc0MDk5MzU0Nywic2wiOmZhbHNlLCJleHAiOjE3NDA5OTM4NDcsImlhdCI6MTc0MDk5MzU0NywiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJYTTh6U2JueEhjbFBwdDdvamlDSXJDdlZWMW8iLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.kNH4QnL27o0DZwJ3f0-pmw_BU885nIDbqBZQidOdvWfMbR6uzJ5IEOT4aGDXGudUf2Yds0bS4Z8h1CeXL5_Io9vHx7DqBK1XgA9vO4fSuMro3phIlnNc09FCjREV-losP6FhIw9veJjFkcLMD2Pln2rBohKQKMwYF5sJEiOJD58ou14lgSqVjD4SusDeIevp-I5jkNKDOndxR_qd1ZotyDbvjL0KTHgEkmqYuIbjNEv9LJjddhj9y2ykVHu1dB9bDaha3Bi4S2UNJ0r_SnpVzvKZKlD2iWAHn993omt_n17Od9IKjNjpRBXNhQNFwLbEstU7518CsEmbRcsKCFRMsQ"
+expires_in
+: 
+298
+iat
+: 
+1740993547
+jti
+: 
+"XM8zSbnxHclPpt7ojiCIrCvVV1o"
+lt
+: 
+1740993547
+refresh_token
+: 
+"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJmOWZjNmMzOGY0YjE0ZTAxYmMxMzE2ZTI3YzFhNTU5MyIsInNjb3BlIjpbIm9wZW5pZCJdLCJhdGkiOiJYTTh6U2JueEhjbFBwdDdvamlDSXJDdlZWMW8iLCJsdCI6MTc0MDk5MzU0Nywic2wiOmZhbHNlLCJleHAiOjE3NDE1OTgzNDcsImlhdCI6MTc0MDk5MzU0NywiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJvVk5CbWZERFljT0ZNUk45RkstR3VaRURSaDQiLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.nKxcVpvaNARWufDTD5yO0bNIukrjhkOO4xCGqme1P-iBu5SIyWOdWpMbpcP-DuI-UEJiSBvJ2QiExwJOwJp372E64umzd1vzqBpjA6q4r0ENTGHLmfrQJGmckiGARK_nM9fzidaUljDXZ1rBGIpcHK4Jbbtm5HrZdJX4KVm1QGJIElPHblEGdmesnE_X1eXoxnfK7W-XSdPQFLC9bYHViIMdPrA2_HsrnptiV9_ciKFCQ_dddtSjNyz0jw3dJ7_hnkJQhcz7rRMzKg-O3EgRLi4a7FpwMHCBSNaviP_a12XYG72cD5NVVT_m1ba77fYCtB5UEwopF5pv8bJgOaIkWA"
+scope
+: 
+"openid"
+sl
+: 
+false
+token_type
+: 
+"bearer"
+
+
+
+{
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJmOWZjNmMzOGY0YjE0ZTAxYmMxMzE2ZTI3YzFhNTU5MyIsInNjb3BlIjpbIm9wZW5pZCJdLCJsdCI6MTc0MDk5MzU0Nywic2wiOmZhbHNlLCJleHAiOjE3NDA5OTM4NDcsImlhdCI6MTc0MDk5MzU0NywiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJYTTh6U2JueEhjbFBwdDdvamlDSXJDdlZWMW8iLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.kNH4QnL27o0DZwJ3f0-pmw_BU885nIDbqBZQidOdvWfMbR6uzJ5IEOT4aGDXGudUf2Yds0bS4Z8h1CeXL5_Io9vHx7DqBK1XgA9vO4fSuMro3phIlnNc09FCjREV-losP6FhIw9veJjFkcLMD2Pln2rBohKQKMwYF5sJEiOJD58ou14lgSqVjD4SusDeIevp-I5jkNKDOndxR_qd1ZotyDbvjL0KTHgEkmqYuIbjNEv9LJjddhj9y2ykVHu1dB9bDaha3Bi4S2UNJ0r_SnpVzvKZKlD2iWAHn993omt_n17Od9IKjNjpRBXNhQNFwLbEstU7518CsEmbRcsKCFRMsQ",
+    "token_type": "bearer",
+    "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJmOWZjNmMzOGY0YjE0ZTAxYmMxMzE2ZTI3YzFhNTU5MyIsInNjb3BlIjpbIm9wZW5pZCJdLCJhdGkiOiJYTTh6U2JueEhjbFBwdDdvamlDSXJDdlZWMW8iLCJsdCI6MTc0MDk5MzU0Nywic2wiOmZhbHNlLCJleHAiOjE3NDE1OTgzNDcsImlhdCI6MTc0MDk5MzU0NywiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJvVk5CbWZERFljT0ZNUk45RkstR3VaRURSaDQiLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.nKxcVpvaNARWufDTD5yO0bNIukrjhkOO4xCGqme1P-iBu5SIyWOdWpMbpcP-DuI-UEJiSBvJ2QiExwJOwJp372E64umzd1vzqBpjA6q4r0ENTGHLmfrQJGmckiGARK_nM9fzidaUljDXZ1rBGIpcHK4Jbbtm5HrZdJX4KVm1QGJIElPHblEGdmesnE_X1eXoxnfK7W-XSdPQFLC9bYHViIMdPrA2_HsrnptiV9_ciKFCQ_dddtSjNyz0jw3dJ7_hnkJQhcz7rRMzKg-O3EgRLi4a7FpwMHCBSNaviP_a12XYG72cD5NVVT_m1ba77fYCtB5UEwopF5pv8bJgOaIkWA",
+    "expires_in": 298,
+    "scope": "openid",
+    "lt": 1740993547,
+    "sl": false,
+    "iat": 1740993547,
+    "jti": "XM8zSbnxHclPpt7ojiCIrCvVV1o"
+}
