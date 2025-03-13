@@ -1,93 +1,78 @@
-Request URL:
-https://e-lms.byd.com/scan/getScanUrl
-Request Method:
-GET
-Status Code:
-200 OK
-Remote Address:
-127.0.0.1:7890
-Referrer Policy:
-strict-origin-when-cross-origin
-
-cache-control:
-no-cache, no-store, max-age=0, must-revalidate
-connection:
-keep-alive
-content-encoding:
-br
-content-type:
-application/json
-date:
-Mon, 03 Mar 2025 09:20:04 GMT
-expires:
-0
-pragma:
-no-cache
-transfer-encoding:
-chunked
-vary:
-Origin
-vary:
-Access-Control-Request-Method
-vary:
-Access-Control-Request-Headers
-x-content-type-options:
-nosniff
-x-xss-protection:
-1; mode=block
-accept:
-*/*
-accept-encoding:
-gzip, deflate, br, zstd
-accept-language:
-zh-CN,zh;q=0.9
-connection:
-keep-alive
-host:
-e-lms.byd.com
-referer:
-https://e-lms.byd.com/pc/user/login?secret
-sec-ch-ua:
-"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"
-sec-ch-ua-mobile:
-?0
-sec-ch-ua-platform:
-"Windows"
-sec-fetch-dest:
-empty
-sec-fetch-mode:
-cors
-sec-fetch-site:
-same-origin
-user-agent:
-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36
-x-branchtype:
-x-device:
-pc
-x-lang:
-zh-CN
-x-timezone:
-Asia/Shanghai
-
-
-{flg: "success", msg: null, data: {state: "0", deviceId: "0881e45bc9a6482d8b2247d97eb73a1d",…}}
-data
-: 
-{state: "0", deviceId: "0881e45bc9a6482d8b2247d97eb73a1d",…}
-flg
-: 
-"success"
-msg
-: 
-null
-
-
+PC端扫码集团二维码登录
+1、/scan/getScanUrl 接口
+response：
 {
     "flg": "success",
     "msg": null,
     "data": {
         "state": "0",
-        "deviceId": "0881e45bc9a6482d8b2247d97eb73a1d",
-        "url": "https://e-lms.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=0881e45bc9a6482d8b2247d97eb73a1d&appid=81c3759eda32441f83f87f5b49b2da91"
+        "deviceId": "7031c5bfd0334732961b349365a9644d",
+        "url": "https://e-lms-uat.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=7031c5bfd0334732961b349365a9644d&appid=a922895e92db4dff981922f2da7ee3ce"
     }
+}
+2、/scan/getScanAuthState?deviceId=7031c5bfd0334732961b349365a9644d 接口
+playload：
+deviceId: 7031c5bfd0334732961b349365a9644d
+reponse：
+{
+    "flg": "success",
+    "msg": null,
+    "data": {
+        "state": "0",
+        "deviceId": "7031c5bfd0334732961b349365a9644d",
+        "url": "https://e-lms-uat.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=7031c5bfd0334732961b349365a9644d&appid=a922895e92db4dff981922f2da7ee3ce"
+    }
+}
+3、/scan/getScanAuthState?deviceId=7031c5bfd0334732961b349365a9644d 接口
+playload：
+deviceId: 7031c5bfd0334732961b349365a9644d
+
+reponse:
+{
+    "flg": "success",
+    "msg": null,
+    "data": {
+        "state": "1",
+        "deviceId": "7031c5bfd0334732961b349365a9644d",
+        "url": "https://e-lms-uat.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=7031c5bfd0334732961b349365a9644d&appid=a922895e92db4dff981922f2da7ee3ce"
+    }
+}
+
+4、/scan/getScanAuthState?deviceId=7031c5bfd0334732961b349365a9644d 接口
+playload：
+deviceId: 7031c5bfd0334732961b349365a9644d
+
+reponse:
+{
+    "flg": "success",
+    "msg": null,
+    "data": {
+        "appid": "a922895e92db4dff981922f2da7ee3ce",
+        "state": "2",
+        "deviceId": "7031c5bfd0334732961b349365a9644d",
+        "userId": "6786475",
+        "url": "https://e-lms-uat.byd.com/pc/errorQrcode?bankurl=https://weixin.byd.com/app/login?deviceid=7031c5bfd0334732961b349365a9644d&appid=a922895e92db4dff981922f2da7ee3ce",
+        "token": "1d1adf0a45db4393968a358fc4bdfef4"
+    }
+}
+
+5、/auth/login 接口
+
+playload:
+appid: "a922895e92db4dff981922f2da7ee3ce"
+code: "6786475"
+token: "1d1adf0a45db4393968a358fc4bdfef4"
+username: "6786475"
+
+reponse:
+{
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiIxMzkxNzJmNTQ4YTI0MmExYWMyMDE5MmEzMmVmOTU5NiIsInNjb3BlIjpbIm9wZW5pZCJdLCJsdCI6MTc0MTU5MDczMSwic2wiOmZhbHNlLCJleHAiOjE3NDE1OTEwMzEsImlhdCI6MTc0MTU5MDczMSwiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJFOGFrZmwyNmNILUdHTF9kWXdwcGRnYWw3N1UiLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.lkD2LE6JwHbuZEa7QZfe2GMJwqSi8teb9KjSEYXokDYlCsRFmIYbae0t3kLXOR-i3Kgb8T6879sIEBiVlEQZRMKe3rb83G5ZMZt3_dbHVsheiK_H5m6U6oDtKRhmgmfaiMNI-FgunqaNJDY0GioyMzMLk87jMLclSEOcY6Ruz6kHW338kExz50ikC9WGRv34v9nYYHXPnJ57Zyk-e0lfTrsGBunmb2kEIgy5KfE5P5r3xGM32DpSF3196oNdsFMYJUH59dlTXwnVaKxTovQRxwtdbXaX9D4_SoMGyU0P12rOsYg6VXpKl6CdwfFCkaGxIJPQSGpO48X1sjQee5MAfQ",
+    "token_type": "bearer",
+    "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiIxMzkxNzJmNTQ4YTI0MmExYWMyMDE5MmEzMmVmOTU5NiIsInNjb3BlIjpbIm9wZW5pZCJdLCJhdGkiOiJFOGFrZmwyNmNILUdHTF9kWXdwcGRnYWw3N1UiLCJsdCI6MTc0MTU5MDczMSwic2wiOmZhbHNlLCJleHAiOjE3NDIxOTU1MzEsImlhdCI6MTc0MTU5MDczMSwiYXV0aG9yaXRpZXMiOlsic3R1ZGVudCJdLCJqdGkiOiJDa2dDeFpuSDJEYjdRZDUwckpxaFp5c2p0akkiLCJjbGllbnRfaWQiOiJ3ZWJfYXBwIn0.LtkjCgfuCAiv2RfDQi94Ai8nO9d4KyTvT61VjGR3vm6ZLIygqmmGBAINJ1e7plmPPXRP-QhyGEZqPgzSNYlePEsAxLGQ_mpRjAyrrN5VOmoDSJEI3L1X3unqd4e1pBXaMtoFBOmLbrbWKj0NBHwyx4Rul0vxymNzRDplM5kwCf2sjBgHmV0R69w9h1l2zGXgkUyeB-ay0xB7OaF1uVnP-z3GsUEV6LIyUb7u8R2egDjh5d9n0-dQVrcJlWnrXnRHEDutW0JiwovYHQnfx1giNwftCy9YigLEL6w2AJxJ4BzkQDfII49hwpi3WTZtsCRDENWAWYbbFRzmr-xdJzNESA",
+    "expires_in": 298,
+    "scope": "openid",
+    "lt": 1741590731,
+    "sl": false,
+    "iat": 1741590731,
+    "jti": "E8akfl26cH-GGL_dYwppdgal77U"
 }

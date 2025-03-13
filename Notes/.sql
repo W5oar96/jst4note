@@ -553,7 +553,7 @@ UPDATE lt_student_info set qw_user_id=staff_code  where qw_user_id is NULL and s
 UPDATE jhi_user ju
 SET password_hash ='$2a$10$qAbkKbkbVMnD5pY9aPCInuRIm37T74K0ICxp/XwPxgbLNBUoYNQiS'
 FROM lt_student_info lsi
-WHERE ju.login = lsi.train_code AND lsi.staff_code =''
+WHERE ju.login = lsi.train_code AND lsi.staff_code ='336546'
 
 /*
 按邮箱重置密码
